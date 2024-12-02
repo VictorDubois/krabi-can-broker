@@ -46,8 +46,36 @@ private:
         struct can_frame frame;
         frame.can_id = can_ids::SERVO_1;
         frame.can_dlc = sizeof(ServoMessage);
-	// @TODO complete this
-        //memcpy(frame.data, msg.get(), sizeof(ServoMessage));
+	frame.data[0] = msg->servo_1.angle;
+	frame.data[1] = msg->servo_1.speed;
+	frame.data[2] = msg->servo_2.angle;
+	frame.data[3] = msg->servo_2.speed;
+	frame.data[4] = msg->servo_3.angle;
+	frame.data[5] = msg->servo_3.speed;
+	frame.data[6] = msg->servo_4.angle;
+	frame.data[7] = msg->servo_4.speed;
+        send_can_frame(frame);
+
+        frame.can_id = can_ids::SERVO_2;
+        frame.can_dlc = sizeof(ServoMessage);
+	frame.data[0] = msg->servo_5.angle;
+	frame.data[1] = msg->servo_5.speed;
+	frame.data[2] = msg->servo_6.angle;
+	frame.data[3] = msg->servo_6.speed;
+	frame.data[4] = msg->servo_7.angle;
+	frame.data[5] = msg->servo_7.speed;
+	frame.data[6] = msg->servo_8.angle;
+	frame.data[7] = msg->servo_8.speed;
+        send_can_frame(frame);
+
+        frame.can_id = can_ids::SCORE;
+        frame.can_dlc = sizeof(Score);
+	for (int i = 0; i < 8; i++)
+	{
+	    frame.data[i] = 0;
+	}
+	frame.data[0] = msg->score%256;// Does not work yet
+	frame.data[7] = msg->score%256;
         send_can_frame(frame);
     }
 
