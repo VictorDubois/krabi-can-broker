@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <net/if.h>      // for struct ifreq and IFNAMSIZ
 #include <sys/ioctl.h>   // for ioctl and SIOCGIFINDEX
-#include "../include/actuators_broker/can_structs.h"
+#include "../include/krabi_can_broker/can_structs.h"
 #include "rclcpp/rclcpp.hpp"
 #include <krabi_msgs/msg/actuators2025.hpp>
 
@@ -63,7 +63,7 @@ private:
 public:
     void send_can_frame(const struct can_frame &frame) {
         if (write(can_socket_, &frame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
-            //RCLCPP_ERROR(this->get_logger(), "Failed to send CAN frame");
+            RCLCPP_ERROR(this->get_logger(), "Failed to send CAN frame");
 		std::cout <<  "Failed to send CAN frame" << std::endl;
         }
     }
@@ -71,7 +71,7 @@ public:
     int init_can_socket(const std::string &interface) {
         int s = socket(PF_CAN, SOCK_RAW, CAN_RAW);
         if (s == -1) {
-            //RCLCPP_ERROR(this->get_logger(), "Error while opening CAN socket");
+            RCLCPP_ERROR(this->get_logger(), "Error while opening CAN socket");
 		std::cout <<  "Error while opening CAN socket" << std::endl;
             return -1;
         }
@@ -83,7 +83,7 @@ public:
         addr.can_family = AF_CAN;
         addr.can_ifindex = ifr.ifr_ifindex;
         if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-            //RCLCPP_ERROR(this->get_logger(), "Error in socket bind");
+            RCLCPP_ERROR(this->get_logger(), "Error in socket bind");
 		std::cout <<  "Error in socket bind" << std::endl;
             return -1;
         }

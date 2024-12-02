@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(actuators_broker)
+project(krabi_can_broker)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -14,16 +14,16 @@ find_package(krabi_msgs REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
-add_executable(krabi_can_broker src/krabi_can_broker.cpp)
+add_executable(actuators_broker src/actuators_broker.cpp)
 
-ament_target_dependencies(krabi_can_broker rclcpp krabi_msgs)
+ament_target_dependencies(actuators_broker rclcpp krabi_msgs)
 
-target_include_directories(krabi_can_broker PUBLIC
+target_include_directories(actuators_broker PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
-target_compile_features(krabi_can_broker PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+target_compile_features(actuators_broker PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
-install(TARGETS krabi_can_broker
+install(TARGETS actuators_broker
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
