@@ -11,28 +11,37 @@
 #include "../include/krabi_can_broker/can_structs.h"
 #include "rclcpp/rclcpp.hpp"
 #include <krabi_msgs/msg/actuators2025.hpp>
+#include <sensor_msgs/msg/battery_state.hpp>
 
 
 // Node class
-class CanPublisherNode: public rclcpp::Node 
+class CanActuatorBroker: public rclcpp::Node 
 {
 public:
-    CanPublisherNode() : Node("can_publisher_node")
+    CanActuatorBroker() : Node("can_publisher_node")
 		     {
         // Initialize the CAN socket
         can_socket_ = init_can_socket("can0");
 
         // Create subscribers for each message type
         actuators2025_sub_ = this->create_subscription<krabi_msgs::msg::Actuators2025>(
-            "actuators2025", 10, std::bind(&CanPublisherNode::servoCallback, this, std::placeholders::_1));
+            "actuators2025", 10, std::bind(&CanActuatorBroker::servoCallback, this, std::placeholders::_1));
+
+        battery_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>("actuators_battery", 10);
+
+
+        // Start a separate thread to listen to CAN messages
+        can_receiver_thread_ = std::thread(&CanActuatorBroker::receive_can_messages, this);
+
+
 
         /*cmd_vel_sub_ = this->create_subscription<CmdVel>(
-            "cmd_vel", 10, std::bind(&CanPublisherNode::cmdVelCallback, this, std::placeholders::_1));*/
+            "cmd_vel", 10, std::bind(&CanActuatorBroker::cmdVelCallback, this, std::placeholders::_1));*/
 
         // Additional subscribers for other message types...
     }
 
-    ~CanPublisherNode() {
+    ~CanActuatorBroker() {
         if (can_socket_ != -1) {
             close(can_socket_);
         }
@@ -40,6 +49,9 @@ public:
 
 private:
     int can_socket_;
+    std::thread can_receiver_thread_;
+    rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_pub_;
+
 
     // Servo callback
     void servoCallback(const krabi_msgs::msg::Actuators2025::SharedPtr msg) {
@@ -76,6 +88,38 @@ private:
 	}
 	frame.data[0] = msg->score;
         send_can_frame(frame);
+    }
+
+    void receive_can_messages() {
+        struct can_frame frame;
+        while (rclcpp::ok()) {
+            int nbytes = read(can_socket_, &frame, sizeof(struct can_frame));
+
+            if (nbytes < 0) {
+                RCLCPP_ERROR(this->get_logger(), "CAN read error");
+                continue;
+            }
+
+            if (frame.can_id == ANALOG_SENSORS && frame.can_dlc == sizeof(AnalogSensors)) {
+                //AnalogSensors analog_data;
+                //std::memcpy(&analog_data, frame.data, sizeof(AnalogSensors));
+                //publish_analog_sensors(analog_data);
+		uint16_t bat_mV = frame.data[1] | (frame.data[0] << 8);
+                publish_analog_sensors(bat_mV);
+		
+            }
+        }
+    }
+
+    void publish_analog_sensors(const uint16_t &battery_voltage_mV) {
+        // Convert the AnalogSensors struct to a ROS2 message (e.g., BatteryState for illustration)
+        auto msg = sensor_msgs::msg::BatteryState();
+        msg.voltage = battery_voltage_mV / 1000.0; // Convert mV to V
+        msg.present = true;
+
+        RCLCPP_INFO(this->get_logger(), "Publishing AnalogSensors: battery_mV=%d", battery_voltage_mV);
+
+        battery_pub_->publish(msg);
     }
 
     // CmdVel callback
@@ -126,11 +170,11 @@ public:
 
 int main(int argc, char *argv[]) {
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<CanPublisherNode>();
+    auto node = std::make_shared<CanActuatorBroker>();
     rclcpp::spin(node);
     rclcpp::shutdown();
 
-    /*auto canTest = CanPublisherNode();
+    /*auto canTest = CanActuatorBroker();
     can_frame frame;
     frame.can_id = 10;
     frame.data[0] = 10;
