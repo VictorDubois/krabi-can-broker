@@ -43,7 +43,7 @@ struct ServoMessage {
 };
 
 struct Score {
-    uint32_t score;  // 4 bytes
+    uint8_t score;  // 1 byte
 };
 
 struct DigitalOutputs {

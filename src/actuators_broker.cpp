@@ -74,8 +74,7 @@ private:
 	{
 	    frame.data[i] = 0;
 	}
-	frame.data[0] = msg->score%256;// Does not work yet
-	frame.data[7] = msg->score%256;
+	frame.data[0] = msg->score;
         send_can_frame(frame);
     }
 
