@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <net/if.h>      // for struct ifreq and IFNAMSIZ
 #include <sys/ioctl.h>   // for ioctl and SIOCGIFINDEX
-#include "../include/krabi_can_broker/can_structs.h"
+#include "../include/krabi_can_broker/CanStruct/can_structs.h"
 #include "rclcpp/rclcpp.hpp"
 #include <krabi_msgs/msg/actuators2025.hpp>
 #include <sensor_msgs/msg/battery_state.hpp>
@@ -19,7 +19,7 @@ class CanActuatorBroker: public rclcpp::Node
 {
 public:
     CanActuatorBroker() : Node("can_publisher_node")
-		     {
+    {
         // Initialize the CAN socket
         can_socket_ = init_can_socket("can0");
 
@@ -55,38 +55,38 @@ private:
 
     // Servo callback
     void servoCallback(const krabi_msgs::msg::Actuators2025::SharedPtr msg) {
-        struct can_frame frame;
-        frame.can_id = can_ids::SERVO_1;
-        frame.can_dlc = sizeof(ServoMessage);
-	frame.data[0] = msg->servo_1.angle;
-	frame.data[1] = msg->servo_1.speed;
-	frame.data[2] = msg->servo_2.angle;
-	frame.data[3] = msg->servo_2.speed;
-	frame.data[4] = msg->servo_3.angle;
-	frame.data[5] = msg->servo_3.speed;
-	frame.data[6] = msg->servo_4.angle;
-	frame.data[7] = msg->servo_4.speed;
-        send_can_frame(frame);
+    struct can_frame frame;
+    frame.can_id = can_ids::SERVO_1;
+    frame.can_dlc = sizeof(ServoMessage);
+    frame.data[0] = msg->servo_1.angle;
+    frame.data[1] = msg->servo_1.speed;
+    frame.data[2] = msg->servo_2.angle;
+    frame.data[3] = msg->servo_2.speed;
+    frame.data[4] = msg->servo_3.angle;
+    frame.data[5] = msg->servo_3.speed;
+    frame.data[6] = msg->servo_4.angle;
+    frame.data[7] = msg->servo_4.speed;
+    send_can_frame(frame);
 
-        frame.can_id = can_ids::SERVO_2;
-        frame.can_dlc = sizeof(ServoMessage);
-	frame.data[0] = msg->servo_5.angle;
-	frame.data[1] = msg->servo_5.speed;
-	frame.data[2] = msg->servo_6.angle;
-	frame.data[3] = msg->servo_6.speed;
-	frame.data[4] = msg->servo_7.angle;
-	frame.data[5] = msg->servo_7.speed;
-	frame.data[6] = msg->servo_8.angle;
-	frame.data[7] = msg->servo_8.speed;
-        send_can_frame(frame);
+    frame.can_id = can_ids::SERVO_2;
+    frame.can_dlc = sizeof(ServoMessage);
+    frame.data[0] = msg->servo_5.angle;
+    frame.data[1] = msg->servo_5.speed;
+    frame.data[2] = msg->servo_6.angle;
+    frame.data[3] = msg->servo_6.speed;
+    frame.data[4] = msg->servo_7.angle;
+    frame.data[5] = msg->servo_7.speed;
+    frame.data[6] = msg->servo_8.angle;
+    frame.data[7] = msg->servo_8.speed;
+    send_can_frame(frame);
 
-        frame.can_id = can_ids::SCORE;
-        frame.can_dlc = sizeof(Score);
-	for (int i = 0; i < 8; i++)
-	{
-	    frame.data[i] = 0;
-	}
-	frame.data[0] = msg->score;
+    frame.can_id = can_ids::SCORE;
+    frame.can_dlc = sizeof(Score);
+    for (int i = 0; i < 8; i++)
+    {
+        frame.data[i] = 0;
+    }
+    frame.data[0] = msg->score;
         send_can_frame(frame);
     }
 
@@ -104,9 +104,9 @@ private:
                 //AnalogSensors analog_data;
                 //std::memcpy(&analog_data, frame.data, sizeof(AnalogSensors));
                 //publish_analog_sensors(analog_data);
-		uint16_t bat_mV = frame.data[1] | (frame.data[0] << 8);
+                uint16_t bat_mV = frame.data[1] | (frame.data[0] << 8);
                 publish_analog_sensors(bat_mV);
-		
+        
             }
         }
     }
@@ -135,7 +135,7 @@ public:
     void send_can_frame(const struct can_frame &frame) {
         if (write(can_socket_, &frame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
             RCLCPP_ERROR(this->get_logger(), "Failed to send CAN frame");
-		std::cout <<  "Failed to send CAN frame" << std::endl;
+        std::cout <<  "Failed to send CAN frame" << std::endl;
         }
     }
 
@@ -143,7 +143,7 @@ public:
         int s = socket(PF_CAN, SOCK_RAW, CAN_RAW);
         if (s == -1) {
             RCLCPP_ERROR(this->get_logger(), "Error while opening CAN socket");
-		std::cout <<  "Error while opening CAN socket" << std::endl;
+        std::cout <<  "Error while opening CAN socket" << std::endl;
             return -1;
         }
         struct ifreq ifr;
@@ -155,7 +155,7 @@ public:
         addr.can_ifindex = ifr.ifr_ifindex;
         if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
             RCLCPP_ERROR(this->get_logger(), "Error in socket bind");
-		std::cout <<  "Error in socket bind" << std::endl;
+        std::cout <<  "Error in socket bind" << std::endl;
             return -1;
         }
         return s;

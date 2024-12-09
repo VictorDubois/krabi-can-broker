@@ -1,0 +1,3 @@
+[submodule "include/krabi_can_broker/CanStruct"]
+	path = include/krabi_can_broker/CanStruct
+	url = git@github.com:VictorDubois/CanStruct.git
