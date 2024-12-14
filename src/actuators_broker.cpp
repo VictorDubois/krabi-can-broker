@@ -11,6 +11,7 @@
 #include "../include/krabi_can_broker/CanStruct/can_structs.h"
 #include "rclcpp/rclcpp.hpp"
 #include <krabi_msgs/msg/actuators2025.hpp>
+#include <krabi_msgs/msg/infos_stepper.hpp>
 #include <sensor_msgs/msg/battery_state.hpp>
 
 
@@ -28,6 +29,7 @@ public:
             "actuators2025", 10, std::bind(&CanActuatorBroker::servoCallback, this, std::placeholders::_1));
 
         battery_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>("actuators_battery", 10);
+        stepper_info_pub_ = this->create_publisher<krabi_msgs::msg::InfosStepper>("stepper_info", 10);
 
 
         // Start a separate thread to listen to CAN messages
@@ -51,42 +53,56 @@ private:
     int can_socket_;
     std::thread can_receiver_thread_;
     rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_pub_;
+    rclcpp::Publisher<krabi_msgs::msg::InfosStepper>::SharedPtr stepper_info_pub_;
 
 
     // Servo callback
     void servoCallback(const krabi_msgs::msg::Actuators2025::SharedPtr msg) {
-    struct can_frame frame;
-    frame.can_id = can_ids::SERVO_1;
-    frame.can_dlc = sizeof(ServoMessage);
-    frame.data[0] = msg->servo_1.angle;
-    frame.data[1] = msg->servo_1.speed;
-    frame.data[2] = msg->servo_2.angle;
-    frame.data[3] = msg->servo_2.speed;
-    frame.data[4] = msg->servo_3.angle;
-    frame.data[5] = msg->servo_3.speed;
-    frame.data[6] = msg->servo_4.angle;
-    frame.data[7] = msg->servo_4.speed;
-    send_can_frame(frame);
+        struct can_frame frame;
+        frame.can_id = can_ids::SERVO_1;
+        frame.can_dlc = sizeof(ServoMessage);
+        frame.data[0] = msg->servo_1.angle;
+        frame.data[1] = msg->servo_1.speed;
+        frame.data[2] = msg->servo_2.angle;
+        frame.data[3] = msg->servo_2.speed;
+        frame.data[4] = msg->servo_3.angle;
+        frame.data[5] = msg->servo_3.speed;
+        frame.data[6] = msg->servo_4.angle;
+        frame.data[7] = msg->servo_4.speed;
+        send_can_frame(frame);
 
-    frame.can_id = can_ids::SERVO_2;
-    frame.can_dlc = sizeof(ServoMessage);
-    frame.data[0] = msg->servo_5.angle;
-    frame.data[1] = msg->servo_5.speed;
-    frame.data[2] = msg->servo_6.angle;
-    frame.data[3] = msg->servo_6.speed;
-    frame.data[4] = msg->servo_7.angle;
-    frame.data[5] = msg->servo_7.speed;
-    frame.data[6] = msg->servo_8.angle;
-    frame.data[7] = msg->servo_8.speed;
-    send_can_frame(frame);
+        frame.can_id = can_ids::SERVO_2;
+        frame.can_dlc = sizeof(ServoMessage);
+        frame.data[0] = msg->servo_5.angle;
+        frame.data[1] = msg->servo_5.speed;
+        frame.data[2] = msg->servo_6.angle;
+        frame.data[3] = msg->servo_6.speed;
+        frame.data[4] = msg->servo_7.angle;
+        frame.data[5] = msg->servo_7.speed;
+        frame.data[6] = msg->servo_8.angle;
+        frame.data[7] = msg->servo_8.speed;
+        send_can_frame(frame);
 
-    frame.can_id = can_ids::SCORE;
-    frame.can_dlc = sizeof(Score);
-    for (int i = 0; i < 8; i++)
-    {
-        frame.data[i] = 0;
-    }
-    frame.data[0] = msg->score;
+
+        frame.can_id = can_ids::STEPPER_CMD;
+        frame.can_dlc = sizeof(Stepper);
+        frame.data[0] = msg->stepper_1.speed >> 8;
+        frame.data[1] = msg->stepper_1.speed%256;
+        frame.data[2] = msg->stepper_1.accel >> 8;
+        frame.data[3] = msg->stepper_1.accel%256;
+        frame.data[4] = msg->stepper_1.position >> 8;
+        frame.data[5] = msg->stepper_1.position%256;
+        frame.data[6] = msg->stepper_1.current;
+        frame.data[7] = msg->stepper_1.mode;
+        send_can_frame(frame);
+
+        frame.can_id = can_ids::SCORE;
+        frame.can_dlc = sizeof(Score);
+        for (int i = 0; i < 8; i++)
+        {
+            frame.data[i] = 0;
+        }
+        frame.data[0] = msg->score;
         send_can_frame(frame);
     }
 
@@ -106,7 +122,16 @@ private:
                 //publish_analog_sensors(analog_data);
                 uint16_t bat_mV = frame.data[1] | (frame.data[0] << 8);
                 publish_analog_sensors(bat_mV);
-        
+            }
+
+            if (frame.can_id == STEPPER_INFO && frame.can_dlc == sizeof(StepperInfo)) {
+                StepperInfo stepper_info;
+                //std::memcpy(&analog_data, frame.data, sizeof(AnalogSensors));
+                //publish_analog_sensors(analog_data);
+                stepper_info.distance_to_go = frame.data[1] | (frame.data[0] << 8);
+                stepper_info.homing_sequences_done = frame.data[2];
+                stepper_info.homing_switches_on = frame.data[3];
+                publish_stepper_info(&stepper_info);
             }
         }
     }
@@ -120,6 +145,18 @@ private:
         RCLCPP_INFO(this->get_logger(), "Publishing AnalogSensors: battery_mV=%d", battery_voltage_mV);
 
         battery_pub_->publish(msg);
+    }
+
+    void publish_stepper_info(const StepperInfo* stepper_info) {
+        // Convert the AnalogSensors struct to a ROS2 message (e.g., BatteryState for illustration)
+        auto msg = krabi_msgs::msg::InfosStepper();
+        msg.distance_to_go = stepper_info->distance_to_go;
+        msg.homing_sequences_done = stepper_info->homing_sequences_done;
+        msg.homing_switch_on = stepper_info->homing_switches_on;
+
+        RCLCPP_INFO(this->get_logger(), "Publishing StepperInfo: distance_to_go=%d, homing_sequences_done = %d", stepper_info->distance_to_go, stepper_info->homing_sequences_done);
+
+        stepper_info_pub_->publish(msg);
     }
 
     // CmdVel callback
