@@ -15,7 +15,7 @@ find_package(sensor_msgs REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
-add_executable(actuators_broker src/actuators_broker.cpp)
+add_executable(actuators_broker src/generic_can_broker.cpp src/actuators_broker.cpp)
 
 ament_target_dependencies(actuators_broker rclcpp krabi_msgs sensor_msgs)
 

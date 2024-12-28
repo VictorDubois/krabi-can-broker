@@ -1,32 +1,36 @@
-#include "actuators_broker.hpp"
+#include "motor_broker.hpp"
 
 
-CanActuatorBroker::CanActuatorBroker() : GenericCanBroker()
+MotorBroker::MotorBroker() : GenericCanBroker()
 {
-    // Create subscribers for each message type
-    actuators2025_sub_ = this->create_subscription<krabi_msgs::msg::Actuators2025>(
-        "actuators2025", 10, std::bind(&CanActuatorBroker::servoCallback, this, std::placeholders::_1));
+    // Initialize the CAN socket
+    can_socket_ = init_can_socket("can0");
 
-    battery_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>("actuators_battery", 10);
-    stepper_info_pub_ = this->create_publisher<krabi_msgs::msg::InfosStepper>("stepper_info", 10);
+    // Create subscribers for each message type
+    //motor_sub_ = this->create_subscription<krabi_msgs::msg::Motors>(
+     //   "motor", 10, std::bind(&MotorBroker::motorCallback, this, std::placeholders::_1));
+
+    odom_lighter_pub_ = this->create_publisher<sensor_msgs::msg::OdomLighter>("odom_lighter", 10);
 
 
     // Start a separate thread to listen to CAN messages
-    can_receiver_thread_ = std::thread(&CanActuatorBroker::receive_can_messages, this);
+    can_receiver_thread_ = std::thread(&MotorBroker::receive_can_messages, this);
 
 
 
     /*cmd_vel_sub_ = this->create_subscription<CmdVel>(
-        "cmd_vel", 10, std::bind(&CanActuatorBroker::cmdVelCallback, this, std::placeholders::_1));*/
+        "cmd_vel", 10, std::bind(&MotorBroker::cmdVelCallback, this, std::placeholders::_1));*/
 
     // Additional subscribers for other message types...
 }
 
-CanActuatorBroker::~CanActuatorBroker() : GenericBroker {
-
+MotorBroker::~MotorBroker() {
+    if (can_socket_ != -1) {
+        close(can_socket_);
+    }
 }
 
-void CanActuatorBroker::receive_can_messages() {
+void MotorBroker::receive_can_messages() {
     struct can_frame frame;
     while (rclcpp::ok()) {
         int nbytes = read(can_socket_, &frame, sizeof(struct can_frame));
@@ -39,7 +43,7 @@ void CanActuatorBroker::receive_can_messages() {
 }
 
 // Servo callback
-void CanActuatorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::SharedPtr msg) {
+void MotorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::SharedPtr msg) {
     struct can_frame frame;
     frame.can_id = can_ids::SERVO_1;
     frame.can_dlc = sizeof(ServoMessage);
@@ -88,7 +92,7 @@ void CanActuatorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::Shar
     send_can_frame(frame);
 }
 
-void CanActuatorBroker::publish_analog_sensors(const uint16_t &battery_voltage_mV) {
+void MotorBroker::publish_analog_sensors(const uint16_t &battery_voltage_mV) {
     // Convert the AnalogSensors struct to a ROS2 message (e.g., BatteryState for illustration)
     auto msg = sensor_msgs::msg::BatteryState();
     msg.voltage = battery_voltage_mV / 1000.0; // Convert mV to V
@@ -99,7 +103,7 @@ void CanActuatorBroker::publish_analog_sensors(const uint16_t &battery_voltage_m
     battery_pub_->publish(msg);
 }
 
-void CanActuatorBroker::publish_stepper_info(const StepperInfo* stepper_info) {
+void MotorBroker::publish_stepper_info(const StepperInfo* stepper_info) {
     // Convert the AnalogSensors struct to a ROS2 message (e.g., BatteryState for illustration)
     auto msg = krabi_msgs::msg::InfosStepper();
     msg.distance_to_go = stepper_info->distance_to_go;
@@ -115,7 +119,7 @@ void CanActuatorBroker::publish_stepper_info(const StepperInfo* stepper_info) {
 
 int main(int argc, char *argv[]) {
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<CanActuatorBroker>();
+    auto node = std::make_shared<MotorBroker>();
     rclcpp::spin(node);
     rclcpp::shutdown();
 
