@@ -45,8 +45,8 @@ void MotorBroker::receive_can_messages() {
 // Servo callback
 void MotorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::SharedPtr msg) {
     struct can_frame frame;
-    frame.can_id = can_ids::SERVO_1;
-    frame.can_dlc = sizeof(ServoMessage);
+    frame.can_id = CAN::can_ids::SERVO_1;
+    frame.can_dlc = sizeof(CAN::ServoMessage);
     frame.data[0] = msg->servo_1.angle;
     frame.data[1] = msg->servo_1.speed;
     frame.data[2] = msg->servo_2.angle;
@@ -57,8 +57,8 @@ void MotorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::SharedPtr 
     frame.data[7] = msg->servo_4.speed;
     send_can_frame(frame);
 
-    frame.can_id = can_ids::SERVO_2;
-    frame.can_dlc = sizeof(ServoMessage);
+    frame.can_id = CAN::can_ids::SERVO_2;
+    frame.can_dlc = sizeof(CAN::ServoMessage);
     frame.data[0] = msg->servo_5.angle;
     frame.data[1] = msg->servo_5.speed;
     frame.data[2] = msg->servo_6.angle;
@@ -70,7 +70,7 @@ void MotorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::SharedPtr 
     send_can_frame(frame);
 
 
-    frame.can_id = can_ids::STEPPER_CMD;
+    frame.can_id = CAN::can_ids::STEPPER_CMD;
     frame.can_dlc = sizeof(Stepper);
     frame.data[0] = msg->stepper_1.speed >> 8;
     frame.data[1] = msg->stepper_1.speed%256;
@@ -82,8 +82,8 @@ void MotorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::SharedPtr 
     frame.data[7] = msg->stepper_1.mode;
     send_can_frame(frame);
 
-    frame.can_id = can_ids::SCORE;
-    frame.can_dlc = sizeof(Score);
+    frame.can_id = CAN::can_ids::SCORE;
+    frame.can_dlc = sizeof(CAN::Score);
     for (int i = 0; i < 8; i++)
     {
         frame.data[i] = 0;
@@ -103,14 +103,14 @@ void MotorBroker::publish_analog_sensors(const uint16_t &battery_voltage_mV) {
     battery_pub_->publish(msg);
 }
 
-void MotorBroker::publish_stepper_info(const StepperInfo* stepper_info) {
+void MotorBroker::publish_stepper_info(const CAN::StepperInfo* stepper_info) {
     // Convert the AnalogSensors struct to a ROS2 message (e.g., BatteryState for illustration)
     auto msg = krabi_msgs::msg::InfosStepper();
     msg.distance_to_go = stepper_info->distance_to_go;
     msg.homing_sequences_done = stepper_info->homing_sequences_done;
     msg.homing_switch_on = stepper_info->homing_switches_on;
 
-    RCLCPP_INFO(this->get_logger(), "Publishing StepperInfo: distance_to_go=%d, homing_sequences_done = %d", stepper_info->distance_to_go, stepper_info->homing_sequences_done);
+    RCLCPP_INFO(this->get_logger(), "Publishing CAN::StepperInfo: distance_to_go=%d, homing_sequences_done = %d", stepper_info->distance_to_go, stepper_info->homing_sequences_done);
 
     stepper_info_pub_->publish(msg);
 }

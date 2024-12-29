@@ -15,15 +15,10 @@ CanActuatorBroker::CanActuatorBroker() : GenericCanBroker()
     can_receiver_thread_ = std::thread(&CanActuatorBroker::receive_can_messages, this);
 
 
-
     /*cmd_vel_sub_ = this->create_subscription<CmdVel>(
         "cmd_vel", 10, std::bind(&CanActuatorBroker::cmdVelCallback, this, std::placeholders::_1));*/
 
     // Additional subscribers for other message types...
-}
-
-CanActuatorBroker::~CanActuatorBroker() : GenericBroker {
-
 }
 
 void CanActuatorBroker::receive_can_messages() {
@@ -41,8 +36,8 @@ void CanActuatorBroker::receive_can_messages() {
 // Servo callback
 void CanActuatorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::SharedPtr msg) {
     struct can_frame frame;
-    frame.can_id = can_ids::SERVO_1;
-    frame.can_dlc = sizeof(ServoMessage);
+    frame.can_id = CAN::can_ids::SERVO_1;
+    frame.can_dlc = sizeof(CAN::ServoMessage);
     frame.data[0] = msg->servo_1.angle;
     frame.data[1] = msg->servo_1.speed;
     frame.data[2] = msg->servo_2.angle;
@@ -53,8 +48,8 @@ void CanActuatorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::Shar
     frame.data[7] = msg->servo_4.speed;
     send_can_frame(frame);
 
-    frame.can_id = can_ids::SERVO_2;
-    frame.can_dlc = sizeof(ServoMessage);
+    frame.can_id = CAN::can_ids::SERVO_2;
+    frame.can_dlc = sizeof(CAN::ServoMessage);
     frame.data[0] = msg->servo_5.angle;
     frame.data[1] = msg->servo_5.speed;
     frame.data[2] = msg->servo_6.angle;
@@ -66,8 +61,8 @@ void CanActuatorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::Shar
     send_can_frame(frame);
 
 
-    frame.can_id = can_ids::STEPPER_CMD;
-    frame.can_dlc = sizeof(Stepper);
+    frame.can_id = CAN::can_ids::STEPPER_CMD;
+    frame.can_dlc = sizeof(CAN::Stepper);
     frame.data[0] = msg->stepper_1.speed >> 8;
     frame.data[1] = msg->stepper_1.speed%256;
     frame.data[2] = msg->stepper_1.accel >> 8;
@@ -78,8 +73,8 @@ void CanActuatorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::Shar
     frame.data[7] = msg->stepper_1.mode;
     send_can_frame(frame);
 
-    frame.can_id = can_ids::SCORE;
-    frame.can_dlc = sizeof(Score);
+    frame.can_id = CAN::can_ids::SCORE;
+    frame.can_dlc = sizeof(CAN::Score);
     for (int i = 0; i < 8; i++)
     {
         frame.data[i] = 0;
@@ -99,7 +94,7 @@ void CanActuatorBroker::publish_analog_sensors(const uint16_t &battery_voltage_m
     battery_pub_->publish(msg);
 }
 
-void CanActuatorBroker::publish_stepper_info(const StepperInfo* stepper_info) {
+void CanActuatorBroker::publish_stepper_info(const CAN::StepperInfo* stepper_info) {
     // Convert the AnalogSensors struct to a ROS2 message (e.g., BatteryState for illustration)
     auto msg = krabi_msgs::msg::InfosStepper();
     msg.distance_to_go = stepper_info->distance_to_go;

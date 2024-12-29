@@ -12,7 +12,11 @@ class CanActuatorBroker: public GenericCanBroker
 public:
     CanActuatorBroker();
 
-    ~CanActuatorBroker();
+    ~CanActuatorBroker() {    
+        if (can_socket_ != -1) {
+            close(can_socket_);
+        }
+    };
 
 private:
     rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_pub_;
@@ -24,7 +28,7 @@ private:
     void receive_can_messages();
     void publish_analog_sensors(const uint16_t &battery_voltage_mV) ;
 
-    void publish_stepper_info(const StepperInfo* stepper_info) ;
+    void publish_stepper_info(const CAN::StepperInfo* stepper_info) ;
     rclcpp::Subscription<krabi_msgs::msg::Actuators2025>::SharedPtr actuators2025_sub_;
 
 };
