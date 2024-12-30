@@ -26,7 +26,7 @@ target_include_directories(actuators_broker PUBLIC
 target_compile_features(actuators_broker PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
 install(TARGETS actuators_broker
-  DESTINATION lib/${PROJECT_NAME}_actuators)
+  DESTINATION lib/${PROJECT_NAME})
 
 add_executable(motor_broker src/generic_can_broker.cpp src/motor_broker.cpp)
 
@@ -38,7 +38,7 @@ target_include_directories(motor_broker PUBLIC
 target_compile_features(motor_broker PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
 install(TARGETS motor_broker
-  DESTINATION lib/${PROJECT_NAME}_motor)
+  DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
