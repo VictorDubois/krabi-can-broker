@@ -25,9 +25,6 @@ target_include_directories(actuators_broker PUBLIC
   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
 target_compile_features(actuators_broker PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
-install(TARGETS actuators_broker
-  DESTINATION lib/${PROJECT_NAME})
-
 add_executable(motor_broker src/generic_can_broker.cpp src/motor_broker.cpp)
 
 ament_target_dependencies(motor_broker rclcpp krabi_msgs sensor_msgs geometry_msgs)
@@ -37,7 +34,7 @@ target_include_directories(motor_broker PUBLIC
   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
 target_compile_features(motor_broker PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
-install(TARGETS motor_broker
+install(TARGETS motor_broker actuators_broker
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
