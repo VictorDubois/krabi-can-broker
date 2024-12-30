@@ -88,6 +88,15 @@ void MotorBroker::cmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg)
     frame.data[6] = angular_z_µrad_s >> 8;
     frame.data[7] = angular_z_µrad_s;
     send_can_frame(frame);
+
+
+    frame.can_id = CAN::can_ids::CMD_VEL_FLOAT;
+    frame.can_dlc = sizeof(CAN::CmdVelFloat);
+    float l_linear_x_float = msg->linear.x;
+    float l_angular_z_float = msg->angular.z;
+    memcpy(&(frame.data), &(l_linear_x_float), sizeof(float));
+    memcpy(&(frame.data) + sizeof(float), &(l_angular_z_float), sizeof(float));
+    send_can_frame(frame);
 }
 
 void MotorBroker::motorsParametersCallback(const krabi_msgs::msg::MotorsParameters::SharedPtr msg) {
