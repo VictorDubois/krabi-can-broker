@@ -19,7 +19,8 @@ GenericCanBroker::GenericCanBroker() : Node("can_publisher_node")
     can_socket_ = init_can_socket("can0");
 
     // Start a separate thread to listen to CAN messages
-    can_receiver_thread_ = std::thread(&GenericCanBroker::receive_can_messages, this);
+    // (to be done in children)
+    // can_receiver_thread_ = std::thread(&GenericCanBroker::receive_can_messages, this);
 }
 
 GenericCanBroker::~GenericCanBroker() {

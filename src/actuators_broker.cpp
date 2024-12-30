@@ -30,6 +30,14 @@ void CanActuatorBroker::receive_can_messages() {
             RCLCPP_ERROR(this->get_logger(), "CAN read error");
             continue;
         }
+
+        if (frame.can_id == CAN::can_ids::STEPPER_INFO && frame.can_dlc == sizeof(CAN::StepperInfo)) {
+            CAN::StepperInfo stepper_info;
+            stepper_info.distance_to_go = frame.data[1] | (frame.data[0] << 8);
+            stepper_info.homing_sequences_done = frame.data[2];
+            stepper_info.homing_switches_on = frame.data[3];
+            publish_stepper_info(&stepper_info);
+        }
     }
 }
 
