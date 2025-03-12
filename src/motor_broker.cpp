@@ -18,6 +18,9 @@ MotorBroker::MotorBroker() : GenericCanBroker()
 
 
 
+    motors_enable_sub_ = this->create_subscription<std_msgs::msg::Bool>(
+        "enable_motor", 10, std::bind(&MotorBroker::motorsEnableCallback, this, std::placeholders::_1));
+
     cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
         "cmd_vel", 10, std::bind(&MotorBroker::cmdVelCallback, this, std::placeholders::_1));
 
@@ -131,6 +134,16 @@ void MotorBroker::motorsCmdCallback(const krabi_msgs::msg::MotorsCmd::SharedPtr 
     frame.data[4] = msg->pwm_override_right >> 8;
     frame.data[5] = msg->pwm_override_right%256;
     frame.data[6] = msg->reset_encoders;
+    send_can_frame(frame);
+}
+
+void MotorBroker::motorsEnableCallback(const std_msgs::msg::Bool::SharedPtr msg) {
+    struct can_frame frame;
+
+    frame.can_id = CAN::can_ids::MOTOR_BOARD_ENABLE;
+    frame.can_dlc = sizeof(CAN::MotorEnable);
+
+    frame.data[0] = msg->data;
     send_can_frame(frame);
 }
 
