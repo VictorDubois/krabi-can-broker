@@ -13,10 +13,10 @@ MotorBroker::MotorBroker() : GenericCanBroker()
     odom_lighter_pub_ = this->create_publisher<krabi_msgs::msg::OdomLighter>("odom_lighter", 10);
     odom_lighter_msg = krabi_msgs::msg::OdomLighter();
 
+    battery_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>("motor_battery", 10);
+
     // Start a separate thread to listen to CAN messages
     can_receiver_thread_ = std::thread(&MotorBroker::receive_can_messages, this);
-
-
 
     motors_enable_sub_ = this->create_subscription<std_msgs::msg::Bool>(
         "enable_motor", 10, std::bind(&MotorBroker::motorsEnableCallback, this, std::placeholders::_1));
@@ -67,6 +67,12 @@ void MotorBroker::receive_can_messages() {
             size_t l_float_length = sizeof(frame.data[0]) * 4;
             std::memcpy(&odom_lighter_msg.speed_vx, frame.data, l_float_length);
             std::memcpy(&odom_lighter_msg.speed_wz, frame.data + l_float_length, l_float_length);
+        }
+
+        if (frame.can_id == CAN::can_ids::MOTOR_BOARD_BATTERY && frame.can_dlc == sizeof(CAN::AnalogSensors)) {
+            CAN::AnalogSensors battery_info;
+            battery_info.battery_mV = frame.data[1] | (frame.data[0] << 8);
+            publish_analog_sensors(battery_info.battery_mV);
         }
     }
 }
@@ -145,6 +151,17 @@ void MotorBroker::motorsEnableCallback(const std_msgs::msg::Bool::SharedPtr msg)
 
     frame.data[0] = msg->data;
     send_can_frame(frame);
+}
+
+void MotorBroker::publish_analog_sensors(const int16_t &battery_voltage_mV) {
+    // Convert the AnalogSensors struct to a ROS2 message (e.g., BatteryState for illustration)
+    auto msg = sensor_msgs::msg::BatteryState();
+    msg.voltage = battery_voltage_mV / 1000.0; // Convert mV to V
+    msg.present = true;
+
+    RCLCPP_INFO(this->get_logger(), "Publishing AnalogSensors: battery_mV=%d", battery_voltage_mV);
+
+    battery_pub_->publish(msg);
 }
 
 int main(int argc, char *argv[]) {

@@ -38,6 +38,12 @@ void CanActuatorBroker::receive_can_messages() {
             stepper_info.homing_switches_on = frame.data[3];
             publish_stepper_info(&stepper_info);
         }
+
+        if (frame.can_id == CAN::can_ids::ANALOG_SENSORS && frame.can_dlc == sizeof(CAN::AnalogSensors)) {
+            CAN::AnalogSensors battery_info;
+            battery_info.battery_mV = frame.data[1] | (frame.data[0] << 8);
+            publish_analog_sensors(battery_info.battery_mV);
+        }
     }
 }
 
@@ -91,7 +97,7 @@ void CanActuatorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::Shar
     send_can_frame(frame);
 }
 
-void CanActuatorBroker::publish_analog_sensors(const uint16_t &battery_voltage_mV) {
+void CanActuatorBroker::publish_analog_sensors(const int16_t &battery_voltage_mV) {
     // Convert the AnalogSensors struct to a ROS2 message (e.g., BatteryState for illustration)
     auto msg = sensor_msgs::msg::BatteryState();
     msg.voltage = battery_voltage_mV / 1000.0; // Convert mV to V

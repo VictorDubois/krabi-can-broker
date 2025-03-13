@@ -26,7 +26,7 @@ private:
     void servoCallback(const krabi_msgs::msg::Actuators2025::SharedPtr msg) ;
 
     void receive_can_messages();
-    void publish_analog_sensors(const uint16_t &battery_voltage_mV) ;
+    void publish_analog_sensors(const int16_t &battery_voltage_mV) ;
 
     void publish_stepper_info(const CAN::StepperInfo* stepper_info) ;
     rclcpp::Subscription<krabi_msgs::msg::Actuators2025>::SharedPtr actuators2025_sub_;
