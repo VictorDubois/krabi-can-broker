@@ -7,8 +7,9 @@ CanActuatorBroker::CanActuatorBroker() : GenericCanBroker()
     actuators2025_sub_ = this->create_subscription<krabi_msgs::msg::Actuators2025>(
         "actuators2025", 10, std::bind(&CanActuatorBroker::servoCallback, this, std::placeholders::_1));
 
-    battery_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>("actuators_battery", 10);
-    stepper_info_pub_ = this->create_publisher<krabi_msgs::msg::InfosStepper>("stepper_info", 10);
+        battery_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>("actuators_battery", 10);
+        vacuum_pub_ = this->create_publisher<std_msgs::msg::Float32>("vacuum", 10);
+        stepper_info_pub_ = this->create_publisher<krabi_msgs::msg::InfosStepper>("stepper_info", 10);
 
 
     // Start a separate thread to listen to CAN messages
@@ -40,9 +41,12 @@ void CanActuatorBroker::receive_can_messages() {
         }
 
         if (frame.can_id == CAN::can_ids::ANALOG_SENSORS && frame.can_dlc == sizeof(CAN::AnalogSensors)) {
-            CAN::AnalogSensors battery_info;
-            battery_info.battery_mV = frame.data[1] | (frame.data[0] << 8);
-            publish_analog_sensors(battery_info.battery_mV);
+            CAN::AnalogSensors analogSensors;
+            analogSensors.battery_mV = frame.data[1] | (frame.data[0] << 8);
+            analogSensors.vacuum_1 = frame.data[3] | (frame.data[2] << 8);
+            analogSensors.vacuum_2 = frame.data[5] | (frame.data[4] << 8);
+            publish_analog_sensors(analogSensors.battery_mV);
+            publish_vacuum(analogSensors.battery_mV);
         }
     }
 }
@@ -103,9 +107,18 @@ void CanActuatorBroker::publish_analog_sensors(const int16_t &battery_voltage_mV
     msg.voltage = battery_voltage_mV / 1000.0; // Convert mV to V
     msg.present = true;
 
-    RCLCPP_INFO(this->get_logger(), "Publishing AnalogSensors: battery_mV=%d", battery_voltage_mV);
+    RCLCPP_INFO(this->get_logger(), "Publishing Battery: battery_mV=%d", battery_voltage_mV);
 
     battery_pub_->publish(msg);
+}
+
+void CanActuatorBroker::publish_vacuum(const int16_t &vacuum) {
+    auto msg = std_msgs::msg::Float32();
+    msg.data = vacuum/1000.0;
+
+    RCLCPP_INFO(this->get_logger(), "Publishing Vacuum: %d", vacuum);
+
+    vacuum_pub_->publish(msg);
 }
 
 void CanActuatorBroker::publish_stepper_info(const CAN::StepperInfo* stepper_info) {

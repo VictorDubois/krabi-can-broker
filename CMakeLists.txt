@@ -11,6 +11,7 @@ find_package(rclcpp REQUIRED)
 find_package(krabi_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 
 # uncomment the following section in order to fill in
 # further dependencies manually.
@@ -18,7 +19,7 @@ find_package(geometry_msgs REQUIRED)
 
 add_executable(actuators_broker src/generic_can_broker.cpp src/actuators_broker.cpp)
 
-ament_target_dependencies(actuators_broker rclcpp krabi_msgs sensor_msgs geometry_msgs)
+ament_target_dependencies(actuators_broker rclcpp krabi_msgs sensor_msgs geometry_msgs std_msgs)
 
 target_include_directories(actuators_broker PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -27,7 +28,7 @@ target_compile_features(actuators_broker PUBLIC c_std_99 cxx_std_17)  # Require 
 
 add_executable(motor_broker src/generic_can_broker.cpp src/motor_broker.cpp)
 
-ament_target_dependencies(motor_broker rclcpp krabi_msgs sensor_msgs geometry_msgs)
+ament_target_dependencies(motor_broker rclcpp krabi_msgs sensor_msgs geometry_msgs std_msgs)
 
 target_include_directories(motor_broker PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -39,7 +40,7 @@ install(TARGETS motor_broker actuators_broker
 
 install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME})
-  
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
