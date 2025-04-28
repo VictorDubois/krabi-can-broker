@@ -92,12 +92,26 @@ void MotorBroker::receive_can_messages()
             std::memcpy(&odom_lighter_msg.angle_rz, frame.data, l_float_length);
         }
 
-        if (frame.can_id == CAN::can_ids::ODOMETRY_SPEED
-            && frame.can_dlc == sizeof(CAN::SpeedOdometry))
+        if (frame.can_id == CAN::can_ids::ODOMETRY_SPEED_FLOAT
+            && frame.can_dlc == sizeof(CAN::SpeedOdometryFloat))
         {
             size_t l_float_length = sizeof(frame.data[0]) * 4;
             std::memcpy(&odom_lighter_msg.speed_vx, frame.data, l_float_length);
             std::memcpy(&odom_lighter_msg.speed_wz, frame.data + l_float_length, l_float_length);
+            odom_lighter_pub_->publish(odom_lighter_msg);
+        }
+
+        if (frame.can_id == CAN::can_ids::ODOMETRY_SPEED
+            && frame.can_dlc == sizeof(CAN::SpeedOdometry))
+        {
+            int32_t speedVx_µm_s = (frame.data[3] << 24) | (frame.data[2] << 16)
+                                   | (frame.data[1] << 8) | frame.data[0];
+            odom_lighter_msg.speed_vx = speedVx_µm_s / 1000000.f;
+
+            int32_t speedWz_mrad_s = (frame.data[3] << 24) | (frame.data[2] << 16)
+                                     | (frame.data[1] << 8) | frame.data[0];
+            odom_lighter_msg.speed_wz = speedWz_mrad_s / 1000.f;
+            odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
         if (frame.can_id == CAN::can_ids::MOTOR_BOARD_BATTERY
