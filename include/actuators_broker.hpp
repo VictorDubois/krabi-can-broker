@@ -1,6 +1,7 @@
 #pragma once
 
 #include "generic_can_broker.hpp"
+#include <builtin_interfaces/msg/duration.hpp>
 #include <krabi_msgs/msg/actuators2025.hpp>
 #include <krabi_msgs/msg/ax12_info.hpp>
 #include <krabi_msgs/msg/infos_stepper.hpp>
@@ -23,6 +24,8 @@ public:
     };
 
 private:
+    bool m_is_blue;
+    int8_t m_remaining_time = 100;
     rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_pub_;
     rclcpp::Publisher<krabi_msgs::msg::InfosStepper>::SharedPtr stepper_info_pub_;
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr vacuum_pub_;
@@ -33,6 +36,7 @@ private:
     rclcpp::Publisher<std_msgs::msg::Byte>::SharedPtr digitalReads_pub;
     // Servo callback
     void servoCallback(const krabi_msgs::msg::Actuators2025::SharedPtr msg);
+    void remainingTimeCallback(const builtin_interfaces::msg::Duration::SharedPtr msg);
 
     void receive_can_messages();
     void publish_analog_sensors(const int16_t& battery_voltage_mV);
@@ -41,4 +45,5 @@ private:
 
     void publish_stepper_info(const CAN::StepperInfo* stepper_info);
     rclcpp::Subscription<krabi_msgs::msg::Actuators2025>::SharedPtr actuators2025_sub_;
+    rclcpp::Subscription<builtin_interfaces::msg::Duration>::SharedPtr remaining_time_sub_;
 };

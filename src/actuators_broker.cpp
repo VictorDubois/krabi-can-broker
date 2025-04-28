@@ -8,6 +8,10 @@ CanActuatorBroker::CanActuatorBroker()
       "actuators2025",
       10,
       std::bind(&CanActuatorBroker::servoCallback, this, std::placeholders::_1));
+    remaining_time_sub_ = this->create_subscription<builtin_interfaces::msg::Duration>(
+      "/remaining_time",
+      10,
+      std::bind(&CanActuatorBroker::remainingTimeCallback, this, std::placeholders::_1));
 
     battery_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>("actuators_battery", 10);
     vacuum_pub_ = this->create_publisher<std_msgs::msg::Float32>("vacuum", 10);
@@ -17,6 +21,8 @@ CanActuatorBroker::CanActuatorBroker()
     AX12_pub_3 = this->create_publisher<krabi_msgs::msg::AX12Info>("ax12_3_info", 10);
     AX12_pub_4 = this->create_publisher<krabi_msgs::msg::AX12Info>("ax12_4_info", 10);
     digitalReads_pub = this->create_publisher<std_msgs::msg::Byte>("digitalRead", 10);
+
+    m_is_blue = this->get_parameter("isBlue").as_bool();
 
     // Start a separate thread to listen to CAN messages
     can_receiver_thread_ = std::thread(&CanActuatorBroker::receive_can_messages, this);
@@ -77,6 +83,11 @@ void CanActuatorBroker::receive_can_messages()
         }*/
     }
 }
+void CanActuatorBroker::remainingTimeCallback(
+  const builtin_interfaces::msg::Duration::SharedPtr msg)
+{
+    m_remaining_time = msg->sec;
+}
 
 // Servo callback
 void CanActuatorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::SharedPtr msg)
@@ -125,6 +136,8 @@ void CanActuatorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::Shar
         frame.data[i] = 0;
     }
     frame.data[0] = msg->score;
+    frame.data[1] = m_remaining_time;
+    frame.data[2] = m_is_blue;
     send_can_frame(frame);
 }
 
