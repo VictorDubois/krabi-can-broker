@@ -37,11 +37,13 @@ private:
     // Servo callback
     void servoCallback(const krabi_msgs::msg::Actuators2025::SharedPtr msg);
     void remainingTimeCallback(const builtin_interfaces::msg::Duration::SharedPtr msg);
+    void sendAX12Write(const krabi_msgs::msg::AX12Cmd msg, CAN::can_ids id);
 
     void receive_can_messages();
     void publish_analog_sensors(const int16_t& battery_voltage_mV);
     void publish_vacuum(const int16_t& stepper_info);
     void publish_digital_sensors(const uint8_t& a_digital_intputs);
+    void publish_AX12(const CAN::AX12Read& ax12_read, int id);
 
     void publish_stepper_info(const CAN::StepperInfo* stepper_info);
     rclcpp::Subscription<krabi_msgs::msg::Actuators2025>::SharedPtr actuators2025_sub_;

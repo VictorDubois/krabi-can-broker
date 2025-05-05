@@ -73,14 +73,19 @@ void CanActuatorBroker::receive_can_messages()
             publish_digital_sensors(frame.data[0]);
         }
 
-        /*if (frame.can_id <= CAN::can_ids::AX12_R1 && frame.can_id <= CAN::can_ids::AX12_R6
+        if (frame.can_id <= CAN::can_ids::AX12_R1 && frame.can_id <= CAN::can_ids::AX12_R6
             && frame.can_dlc == sizeof(CAN::AX12Read))
         {
             CAN::AX12Read ax12_read;
-            ax12_read.current_position =
+            ax12_read.hardwareErrorStatus = frame.data[0];
+            ax12_read.current_position = frame.data[2] | frame.data[1] << 8;
+            ax12_read.presentTemperature = frame.data[3];
+            ax12_read.presentCurrent = frame.data[5] | frame.data[4] << 8;
+            ax12_read.moving = frame.data[6];
+            ax12_read.mode = frame.data[7];
 
-            // publish_digital_sensors(frame.data[0]);
-        }*/
+            publish_AX12(ax12_read, frame.can_id);
+        }
     }
 }
 void CanActuatorBroker::remainingTimeCallback(
@@ -138,6 +143,28 @@ void CanActuatorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::Shar
     frame.data[0] = msg->score;
     frame.data[1] = m_remaining_time;
     frame.data[2] = m_is_blue;
+    send_can_frame(frame);
+
+    sendAX12Write(msg->ax12_1, CAN::can_ids::AX12_W1);
+    sendAX12Write(msg->ax12_2, CAN::can_ids::AX12_W2);
+    sendAX12Write(msg->ax12_3, CAN::can_ids::AX12_W3);
+    sendAX12Write(msg->ax12_4, CAN::can_ids::AX12_W4);
+}
+
+void CanActuatorBroker::sendAX12Write(const krabi_msgs::msg::AX12Cmd ax12_msg, CAN::can_ids id)
+{
+    struct can_frame frame;
+
+    frame.can_id = id;
+    frame.can_dlc = sizeof(CAN::AX12Write);
+    frame.data[0] = ax12_msg.mode;
+    frame.data[1] = (ax12_msg.position >> 8) & 0xFF;
+    frame.data[2] = ax12_msg.position & 0xFF;
+    frame.data[3] = ax12_msg.max_accel;
+    frame.data[4] = ax12_msg.max_speed;
+    frame.data[5] = ax12_msg.torque_enable;
+    frame.data[6] = ax12_msg.temperature_limit;
+    frame.data[7] = ax12_msg.current_limit;
     send_can_frame(frame);
 }
 
@@ -197,6 +224,34 @@ void CanActuatorBroker::publish_stepper_info(const CAN::StepperInfo* stepper_inf
                 stepper_info->homing_sequences_done);
 
     stepper_info_pub_->publish(msg);
+}
+
+void CanActuatorBroker::publish_AX12(const CAN::AX12Read& ax12_read, int id)
+{
+    auto ax12_read_msg = krabi_msgs::msg::AX12Info();
+
+    ax12_read_msg.hardware_error_status = ax12_read.hardwareErrorStatus;
+    ax12_read_msg.current_position = ax12_read.current_position;
+    ax12_read_msg.present_temperature = ax12_read.presentTemperature;
+    ax12_read_msg.present_current = ax12_read.presentCurrent;
+    ax12_read_msg.moving = ax12_read.moving;
+    ax12_read_msg.mode = ax12_read.mode;
+    if (id == CAN::AX12_R1)
+    {
+        AX12_pub_1->publish(ax12_read_msg);
+    }
+    else if (id == CAN::AX12_R2)
+    {
+        AX12_pub_2->publish(ax12_read_msg);
+    }
+    else if (id == CAN::AX12_R3)
+    {
+        AX12_pub_3->publish(ax12_read_msg);
+    }
+    else if (id == CAN::AX12_R4)
+    {
+        AX12_pub_4->publish(ax12_read_msg);
+    }
 }
 
 int main(int argc, char* argv[])
