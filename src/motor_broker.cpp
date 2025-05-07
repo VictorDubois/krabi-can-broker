@@ -104,12 +104,12 @@ void MotorBroker::receive_can_messages()
         if (frame.can_id == CAN::can_ids::ODOMETRY_SPEED
             && frame.can_dlc == sizeof(CAN::SpeedOdometry))
         {
-            int32_t speedVx_µm_s = (frame.data[3] << 24) | (frame.data[2] << 16)
-                                   | (frame.data[1] << 8) | frame.data[0];
+            int32_t speedVx_µm_s = (frame.data[0] << 24) | (frame.data[1] << 16)
+                                   | (frame.data[2] << 8) | frame.data[3];
             odom_lighter_msg.speed_vx = speedVx_µm_s / 1000000.f;
 
-            int32_t speedWz_mrad_s = (frame.data[3] << 24) | (frame.data[2] << 16)
-                                     | (frame.data[1] << 8) | frame.data[0];
+            int32_t speedWz_mrad_s = (frame.data[4] << 24) | (frame.data[5] << 16)
+                                     | (frame.data[6] << 8) | frame.data[7];
             odom_lighter_msg.speed_wz = speedWz_mrad_s / 1000.f;
             odom_lighter_pub_->publish(odom_lighter_msg);
         }
