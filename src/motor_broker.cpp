@@ -73,10 +73,10 @@ void MotorBroker::receive_can_messages()
         if (frame.can_id == CAN::can_ids::ODOMETRY_LIGHT
             && frame.can_dlc == sizeof(CAN::OdometryLight))
         {
-            int32_t poseX_mm = frame.data[3] | (frame.data[2] << 8) | (frame.data[1] << 16);
+            int32_t poseX_mm = frame.data[2] | (frame.data[1] << 8) | (frame.data[0] << 16);
             odom_lighter_msg.pose_x = poseX_mm / 1000.0f;
 
-            int32_t poseY_mm = frame.data[6] | (frame.data[5] << 8) | (frame.data[4] << 16);
+            int32_t poseY_mm = frame.data[5] | (frame.data[4] << 8) | (frame.data[3] << 16);
             odom_lighter_msg.pose_y = poseY_mm / 1000.0f;
 
             int16_t angleRz_centi_deg = frame.data[7] | (frame.data[6] << 8);
