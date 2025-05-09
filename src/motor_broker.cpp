@@ -188,16 +188,33 @@ void MotorBroker::motorsParametersCallback(const krabi_msgs::msg::MotorsParamete
     frame.can_id = CAN::can_ids::MOTOR_BOARD_CURRENT_INPUT;
     frame.can_dlc = sizeof(CAN::MotorBoardCurrentInput);
 
-    uint16_t l_max_current_left = msg->max_current_left;
-    uint16_t l_max_current_right = msg->max_current_right;
-    uint16_t l_max_current = msg->max_current;
+    uint16_t l_max_current_left_mA = msg->max_current_left * 1000;
+    if (msg->max_current_left > 60)
+    {
+        // Avoid overflow
+        l_max_current_left_mA = 60000;
+    }
 
-    frame.data[0] = l_max_current_left >> 8;
-    frame.data[1] = l_max_current_left;
-    frame.data[2] = l_max_current_right >> 8;
-    frame.data[3] = l_max_current_right;
-    frame.data[4] = l_max_current >> 8;
-    frame.data[5] = l_max_current;
+    uint16_t l_max_current_right_mA = msg->max_current_right * 1000;
+    if (msg->max_current_right > 60)
+    {
+        // Avoid overflow
+        l_max_current_right_mA = 60000;
+    }
+
+    uint16_t l_max_current_mA = msg->max_current * 1000;
+    if (msg->max_current > 60)
+    {
+        // Avoid overflow
+        l_max_current_mA = 60000;
+    }
+
+    frame.data[0] = l_max_current_left_mA >> 8;
+    frame.data[1] = l_max_current_left_mA;
+    frame.data[2] = l_max_current_right_mA >> 8;
+    frame.data[3] = l_max_current_right_mA;
+    frame.data[4] = l_max_current_mA >> 8;
+    frame.data[5] = l_max_current_mA;
     send_can_frame(frame);
 }
 
