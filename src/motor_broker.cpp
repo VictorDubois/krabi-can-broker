@@ -139,14 +139,6 @@ void MotorBroker::receive_can_messages()
             odom_lighter_msg.speed_wz = speedWz_mrad_s / 1000.f;
             odom_lighter_pub_->publish(odom_lighter_msg);
         }
-
-        if (frame.can_id == CAN::can_ids::MOTOR_BOARD_BATTERY
-            && frame.can_dlc == sizeof(CAN::AnalogSensors))
-        {
-            CAN::AnalogSensors battery_info;
-            battery_info.battery_mV = frame.data[1] | (frame.data[0] << 8);
-            publish_analog_sensors(battery_info.battery_mV);
-        }
     }
 }
 

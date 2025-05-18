@@ -26,7 +26,8 @@ public:
 private:
     bool m_is_blue;
     int8_t m_remaining_time = 100;
-    rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_power_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_elec_pub_;
     rclcpp::Publisher<krabi_msgs::msg::InfosStepper>::SharedPtr stepper_info_pub_;
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr vacuum_pub_;
     rclcpp::Publisher<krabi_msgs::msg::AX12Info>::SharedPtr AX12_pub_1;
@@ -40,12 +41,13 @@ private:
     void sendAX12Write(const krabi_msgs::msg::AX12Cmd msg, CAN::can_ids id);
 
     void receive_can_messages();
-    void publish_analog_sensors(const int16_t& battery_voltage_mV);
-    void publish_vacuum(const int16_t& stepper_info);
+
+    void publish_analog_sensors(const int16_t& battery_power_mV, const int16_t& battery_elec_mV);
+    void publish_vacuum(const int16_t& a_vacuum);
     void publish_digital_sensors(const uint8_t& a_digital_intputs);
     void publish_AX12(const CAN::AX12Read& ax12_read, int id);
-
     void publish_stepper_info(const CAN::StepperInfo* stepper_info);
+
     rclcpp::Subscription<krabi_msgs::msg::Actuators2025>::SharedPtr actuators2025_sub_;
     rclcpp::Subscription<builtin_interfaces::msg::Duration>::SharedPtr remaining_time_sub_;
 };

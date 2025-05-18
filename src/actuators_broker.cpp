@@ -13,7 +13,9 @@ CanActuatorBroker::CanActuatorBroker()
       10,
       std::bind(&CanActuatorBroker::remainingTimeCallback, this, std::placeholders::_1));
 
-    battery_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>("actuators_battery", 10);
+    battery_power_pub_
+      = this->create_publisher<sensor_msgs::msg::BatteryState>("power_battery", 10);
+    battery_elec_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>("elec_battery", 10);
     vacuum_pub_ = this->create_publisher<std_msgs::msg::Float32>("vacuum", 10);
     stepper_info_pub_ = this->create_publisher<krabi_msgs::msg::InfosStepper>("stepper_info", 10);
     AX12_pub_1 = this->create_publisher<krabi_msgs::msg::AX12Info>("ax12_1_info", 10);
@@ -60,11 +62,12 @@ void CanActuatorBroker::receive_can_messages()
             && frame.can_dlc == sizeof(CAN::AnalogSensors))
         {
             CAN::AnalogSensors analogSensors;
-            analogSensors.battery_mV = frame.data[1] | (frame.data[0] << 8);
-            analogSensors.vacuum_1 = frame.data[3] | (frame.data[2] << 8);
-            analogSensors.vacuum_2 = frame.data[5] | (frame.data[4] << 8);
-            publish_analog_sensors(analogSensors.battery_mV);
-            publish_vacuum(analogSensors.battery_mV);
+            analogSensors.battery_power_mV = frame.data[1] | (frame.data[0] << 8);
+            analogSensors.battery_elec_mV = frame.data[3] | (frame.data[2] << 8);
+            analogSensors.vacuum_1 = frame.data[5] | (frame.data[4] << 8);
+            analogSensors.vacuum_2 = frame.data[7] | (frame.data[6] << 8);
+            publish_analog_sensors(analogSensors.battery_power_mV, analogSensors.battery_elec_mV);
+            publish_vacuum(analogSensors.vacuum_1);
         }
 
         if (frame.can_id == CAN::can_ids::DIGITAL_INPUTS
@@ -188,16 +191,24 @@ void CanActuatorBroker::publish_digital_sensors(const uint8_t& a_digital_intputs
     digitalReads_pub->publish(msg);
 }
 
-void CanActuatorBroker::publish_analog_sensors(const int16_t& battery_voltage_mV)
+void CanActuatorBroker::publish_analog_sensors(const int16_t& battery_power_mV,
+                                               const int16_t& battery_elec_mV)
 {
     // Convert the AnalogSensors struct to a ROS2 message (e.g., BatteryState for illustration)
     auto msg = sensor_msgs::msg::BatteryState();
-    msg.voltage = battery_voltage_mV / 1000.0; // Convert mV to V
+    msg.voltage = battery_power_mV / 1000.0; // Convert mV to V
     msg.present = true;
 
-    RCLCPP_INFO(this->get_logger(), "Publishing Battery: battery_mV=%d", battery_voltage_mV);
+    RCLCPP_INFO(this->get_logger(), "Publishing Battery Power: battery_mV=%d", battery_power_mV);
 
-    battery_pub_->publish(msg);
+    battery_power_pub_->publish(msg);
+
+    msg.voltage = battery_elec_mV / 1000.0; // Convert mV to V
+    msg.present = true;
+
+    RCLCPP_INFO(this->get_logger(), "Publishing Battery Elec: battery_mV=%d", battery_elec_mV);
+
+    battery_elec_pub_->publish(msg);
 }
 
 void CanActuatorBroker::publish_vacuum(const int16_t& vacuum)
