@@ -67,13 +67,13 @@ void CanActuatorBroker::receive_can_messages()
             publish_vacuum(analogSensors.battery_mV);
         }
 
-        if (frame.can_id == CAN::can_ids::DIGITAL_OUTPUTS
-            && frame.can_dlc == sizeof(CAN::DigitalOutputs))
+        if (frame.can_id == CAN::can_ids::DIGITAL_INPUTS
+            && frame.can_dlc == sizeof(CAN::DigitalInputs))
         {
             publish_digital_sensors(frame.data[0]);
         }
 
-        if (frame.can_id <= CAN::can_ids::AX12_R1 && frame.can_id <= CAN::can_ids::AX12_R6
+        if (frame.can_id >= CAN::can_ids::AX12_R1 && frame.can_id <= CAN::can_ids::AX12_R6
             && frame.can_dlc == sizeof(CAN::AX12Read))
         {
             CAN::AX12Read ax12_read;
