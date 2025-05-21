@@ -24,6 +24,7 @@ CanActuatorBroker::CanActuatorBroker()
     AX12_pub_4 = this->create_publisher<krabi_msgs::msg::AX12Info>("ax12_4_info", 10);
     digitalReads_pub = this->create_publisher<std_msgs::msg::Byte>("digitalRead", 10);
 
+    this->declare_parameter("isBlue", true);
     m_is_blue = this->get_parameter("isBlue").as_bool();
 
     // Start a separate thread to listen to CAN messages
