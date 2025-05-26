@@ -101,7 +101,7 @@ void MotorBroker::receive_can_messages()
         if (frame.can_id == CAN::can_ids::ODOMETRY_THETA
             && frame.can_dlc == sizeof(CAN::OdometryThetaAndCurrent))
         {
-            int32_t angleRz_centi_deg = frame.data[2] | (frame.data[2] << 8) | (frame.data[1] << 16)
+            int32_t angleRz_centi_deg = frame.data[3] | (frame.data[2] << 8) | (frame.data[1] << 16)
                                         | (frame.data[0] << 24);
 
             int16_t current_left = frame.data[5] | (frame.data[4] << 8);
