@@ -58,8 +58,8 @@ void MotorBroker::receive_can_messages()
             continue;
         }
 
-        if (frame.can_id == CAN::can_ids::ODOMETRY_XY_FLOAT
-            && frame.can_dlc == sizeof(CAN::OdometryXYFloat))
+        else if (frame.can_id == CAN::can_ids::ODOMETRY_XY_FLOAT
+                 && frame.can_dlc == sizeof(CAN::OdometryXYFloat))
         {
             // odom_lighter_msg.x = frame.data[3] | (frame.data[2] << 8) | (frame.data[1] << 16) |
             // (frame.data[0] << 24); odom_lighter_msg.y = frame.data[7] | (frame.data[6] << 8) |
@@ -70,8 +70,8 @@ void MotorBroker::receive_can_messages()
             odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
-        if (frame.can_id == CAN::can_ids::ODOMETRY_LIGHT
-            && frame.can_dlc == sizeof(CAN::OdometryLight))
+        else if (frame.can_id == CAN::can_ids::ODOMETRY_LIGHT
+                 && frame.can_dlc == sizeof(CAN::OdometryLight))
         {
             int32_t poseX_mm = frame.data[2] | (frame.data[1] << 8) | (frame.data[0] << 16);
             odom_lighter_msg.pose_x = poseX_mm / 1000.0f;
@@ -85,7 +85,8 @@ void MotorBroker::receive_can_messages()
             odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
-        if (frame.can_id == CAN::can_ids::ODOMETRY_XY && frame.can_dlc == sizeof(CAN::OdometryXY))
+        else if (frame.can_id == CAN::can_ids::ODOMETRY_XY
+                 && frame.can_dlc == sizeof(CAN::OdometryXY))
         {
             int32_t poseX_mm = frame.data[3] | (frame.data[2] << 8) | (frame.data[1] << 16)
                                | (frame.data[0] << 24);
@@ -98,8 +99,8 @@ void MotorBroker::receive_can_messages()
             odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
-        if (frame.can_id == CAN::can_ids::ODOMETRY_THETA
-            && frame.can_dlc == sizeof(CAN::OdometryThetaAndCurrent))
+        else if (frame.can_id == CAN::can_ids::ODOMETRY_THETA
+                 && frame.can_dlc == sizeof(CAN::OdometryThetaAndCurrent))
         {
             int32_t angleRz_centi_deg = frame.data[3] | (frame.data[2] << 8) | (frame.data[1] << 16)
                                         | (frame.data[0] << 24);
@@ -111,15 +112,15 @@ void MotorBroker::receive_can_messages()
             odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
-        if (frame.can_id == CAN::can_ids::ODOMETRY_THETA_FLOAT
-            && frame.can_dlc == sizeof(CAN::OdometryThetaFloat))
+        else if (frame.can_id == CAN::can_ids::ODOMETRY_THETA_FLOAT
+                 && frame.can_dlc == sizeof(CAN::OdometryThetaFloat))
         {
             size_t l_float_length = sizeof(frame.data[0]) * 4;
             std::memcpy(&odom_lighter_msg.angle_rz, frame.data, l_float_length);
         }
 
-        if (frame.can_id == CAN::can_ids::ODOMETRY_SPEED_FLOAT
-            && frame.can_dlc == sizeof(CAN::SpeedOdometryFloat))
+        else if (frame.can_id == CAN::can_ids::ODOMETRY_SPEED_FLOAT
+                 && frame.can_dlc == sizeof(CAN::SpeedOdometryFloat))
         {
             size_t l_float_length = sizeof(frame.data[0]) * 4;
             std::memcpy(&odom_lighter_msg.speed_vx, frame.data, l_float_length);
@@ -127,8 +128,8 @@ void MotorBroker::receive_can_messages()
             odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
-        if (frame.can_id == CAN::can_ids::ODOMETRY_SPEED
-            && frame.can_dlc == sizeof(CAN::SpeedOdometry))
+        else if (frame.can_id == CAN::can_ids::ODOMETRY_SPEED
+                 && frame.can_dlc == sizeof(CAN::SpeedOdometry))
         {
             int32_t speedVx_µm_s = (frame.data[0] << 24) | (frame.data[1] << 16)
                                    | (frame.data[2] << 8) | frame.data[3];
@@ -138,6 +139,10 @@ void MotorBroker::receive_can_messages()
                                      | (frame.data[6] << 8) | frame.data[7];
             odom_lighter_msg.speed_wz = speedWz_mrad_s / 1000.f;
             odom_lighter_pub_->publish(odom_lighter_msg);
+        }
+        else
+        {
+            usleep(100);
         }
     }
 }

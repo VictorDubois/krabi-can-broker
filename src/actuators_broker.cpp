@@ -50,7 +50,8 @@ void CanActuatorBroker::receive_can_messages()
             continue;
         }
 
-        if (frame.can_id == CAN::can_ids::STEPPER_INFO && frame.can_dlc == sizeof(CAN::StepperInfo))
+        else if (frame.can_id == CAN::can_ids::STEPPER_INFO
+                 && frame.can_dlc == sizeof(CAN::StepperInfo))
         {
             CAN::StepperInfo stepper_info;
             stepper_info.distance_to_go = frame.data[1] | (frame.data[0] << 8);
@@ -59,8 +60,8 @@ void CanActuatorBroker::receive_can_messages()
             publish_stepper_info(&stepper_info);
         }
 
-        if (frame.can_id == CAN::can_ids::ANALOG_SENSORS
-            && frame.can_dlc == sizeof(CAN::AnalogSensors))
+        else if (frame.can_id == CAN::can_ids::ANALOG_SENSORS
+                 && frame.can_dlc == sizeof(CAN::AnalogSensors))
         {
             CAN::AnalogSensors analogSensors;
             analogSensors.battery_power_mV = frame.data[1] | (frame.data[0] << 8);
@@ -71,14 +72,14 @@ void CanActuatorBroker::receive_can_messages()
             publish_vacuum(analogSensors.vacuum_1);
         }
 
-        if (frame.can_id == CAN::can_ids::DIGITAL_INPUTS
-            && frame.can_dlc == sizeof(CAN::DigitalInputs))
+        else if (frame.can_id == CAN::can_ids::DIGITAL_INPUTS
+                 && frame.can_dlc == sizeof(CAN::DigitalInputs))
         {
             publish_digital_sensors(frame.data[0]);
         }
 
-        if (frame.can_id >= CAN::can_ids::AX12_R1 && frame.can_id <= CAN::can_ids::AX12_R6
-            && frame.can_dlc == sizeof(CAN::AX12Read))
+        else if (frame.can_id >= CAN::can_ids::AX12_R1 && frame.can_id <= CAN::can_ids::AX12_R6
+                 && frame.can_dlc == sizeof(CAN::AX12Read))
         {
             CAN::AX12Read ax12_read;
             ax12_read.hardwareErrorStatus = frame.data[0];
@@ -89,6 +90,10 @@ void CanActuatorBroker::receive_can_messages()
             ax12_read.mode = frame.data[7];
 
             publish_AX12(ax12_read, frame.can_id);
+        }
+        else
+        {
+            usleep(100);
         }
     }
 }
