@@ -154,9 +154,9 @@ void MotorBroker::cmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg)
     frame.can_id = CAN::can_ids::CMD_VEL;
     frame.can_dlc = sizeof(CAN::CmdVel);
 
-    float linear_x_µm_s_float = msg->linear.x * 10e6;
+    float linear_x_µm_s_float = msg->linear.x * 1e6;
     int32_t linear_x_µm_s = linear_x_µm_s_float;
-    float angular_z_µrad_s_float = msg->angular.z * 10e6;
+    float angular_z_µrad_s_float = msg->angular.z * 1e6;
     int32_t angular_z_µrad_s = angular_z_µrad_s_float;
 
     frame.data[0] = (linear_x_µm_s >> 24) & 0xFF;
