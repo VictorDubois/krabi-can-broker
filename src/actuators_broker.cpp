@@ -158,6 +158,18 @@ void CanActuatorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::Shar
     sendAX12Write(msg->ax12_2, CAN::can_ids::AX12_W2);
     sendAX12Write(msg->ax12_3, CAN::can_ids::AX12_W3);
     sendAX12Write(msg->ax12_4, CAN::can_ids::AX12_W4);
+
+    frame.can_id = CAN::can_ids::DIGITAL_OUTPUTS;
+    frame.can_dlc = sizeof(CAN::DigitalOutputs);
+    for (int i = 0; i < 8; i++)
+    {
+        frame.data[i] = 0;
+    }
+    frame.data[0] = msg->vacuum_1.enable_pump;
+    frame.data[1] = msg->vacuum_1.release;
+    frame.data[2] = msg->vacuum_2.enable_pump;
+    frame.data[3] = msg->vacuum_2.release;
+    send_can_frame(frame);
 }
 
 void CanActuatorBroker::sendAX12Write(const krabi_msgs::msg::AX12Cmd ax12_msg, CAN::can_ids id)
