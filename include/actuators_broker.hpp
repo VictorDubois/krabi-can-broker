@@ -6,6 +6,7 @@
 #include <krabi_msgs/msg/ax12_info.hpp>
 #include <krabi_msgs/msg/infos_stepper.hpp>
 #include <sensor_msgs/msg/battery_state.hpp>
+#include <std_msgs/msg/bool.hpp>
 #include <std_msgs/msg/byte.hpp>
 #include <std_msgs/msg/float32.hpp>
 
@@ -38,6 +39,7 @@ private:
     // Servo callback
     void servoCallback(const krabi_msgs::msg::Actuators2025::SharedPtr msg);
     void remainingTimeCallback(const builtin_interfaces::msg::Duration::SharedPtr msg);
+    void isBlueCallback(const std_msgs::msg::Bool::SharedPtr msg);
     void sendAX12Write(const krabi_msgs::msg::AX12Cmd msg, CAN::can_ids id);
 
     void receive_can_messages();
@@ -50,4 +52,5 @@ private:
 
     rclcpp::Subscription<krabi_msgs::msg::Actuators2025>::SharedPtr actuators2025_sub_;
     rclcpp::Subscription<builtin_interfaces::msg::Duration>::SharedPtr remaining_time_sub_;
+    rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr is_blue_sub_;
 };
