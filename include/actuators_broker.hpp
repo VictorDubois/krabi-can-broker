@@ -2,6 +2,7 @@
 
 #include "generic_can_broker.hpp"
 #include <builtin_interfaces/msg/duration.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
 #include <krabi_msgs/msg/actuators2025.hpp>
 #include <krabi_msgs/msg/ax12_info.hpp>
 #include <krabi_msgs/msg/infos_stepper.hpp>
@@ -27,6 +28,7 @@ public:
 private:
     bool m_is_blue;
     int8_t m_remaining_time = 100;
+    CAN::Obstacles m_current_obstacles;
     rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_power_pub_;
     rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_elec_pub_;
     rclcpp::Publisher<krabi_msgs::msg::InfosStepper>::SharedPtr stepper_info_pub_;
@@ -40,6 +42,9 @@ private:
     void servoCallback(const krabi_msgs::msg::Actuators2025::SharedPtr msg);
     void remainingTimeCallback(const builtin_interfaces::msg::Duration::SharedPtr msg);
     void isBlueCallback(const std_msgs::msg::Bool::SharedPtr msg);
+    void updateLidarCallback(
+      std::shared_ptr<geometry_msgs::msg::PoseStamped const> closest_obstacle,
+      bool front);
     void sendAX12Write(const krabi_msgs::msg::AX12Cmd msg, CAN::can_ids id);
 
     void receive_can_messages();
@@ -53,4 +58,7 @@ private:
     rclcpp::Subscription<krabi_msgs::msg::Actuators2025>::SharedPtr actuators2025_sub_;
     rclcpp::Subscription<builtin_interfaces::msg::Duration>::SharedPtr remaining_time_sub_;
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr is_blue_sub_;
+    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr obstacle_posestamped_sub_;
+    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr
+      obstacle_behind_posestamped_sub_;
 };

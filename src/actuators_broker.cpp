@@ -1,4 +1,10 @@
 #include "actuators_broker.hpp"
+#include "krabilib/position.h"
+#include <geometry_msgs/msg/point.hpp>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <tf2_ros/transform_broadcaster.h>
 
 CanActuatorBroker::CanActuatorBroker()
   : GenericCanBroker()
@@ -111,6 +117,26 @@ void CanActuatorBroker::isBlueCallback(const std_msgs::msg::Bool::SharedPtr msg)
     m_is_blue = msg->data;
 }
 
+void CanActuatorBroker::updateLidarCallback(
+  std::shared_ptr<geometry_msgs::msg::PoseStamped const> closest_obstacle,
+  bool front)
+{
+    // The obstacle is in the robot's frame
+    auto obstacle = Position(Distance(closest_obstacle->pose.position.x),
+                             Distance(closest_obstacle->pose.position.y));
+
+    if (front)
+    {
+        m_current_obstacles.front_obs_angleRz_deg = obstacle.getAngle() * 180.0f / M_PI;
+        m_current_obstacles.front_obs_distance_mm = obstacle.getNorme();
+    }
+    else
+    {
+        m_current_obstacles.rear_obs_angleRz_deg = obstacle.getAngle() * 180.0f / M_PI;
+        m_current_obstacles.rear_obs_distance_mm = obstacle.getNorme();
+    }
+}
+
 // Servo callback
 void CanActuatorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::SharedPtr msg)
 {
@@ -177,6 +203,18 @@ void CanActuatorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::Shar
     frame.data[1] = msg->vacuum_1.release;
     frame.data[2] = msg->vacuum_2.enable_pump;
     frame.data[3] = msg->vacuum_2.release;
+    send_can_frame(frame);
+
+    frame.can_id = CAN::can_ids::OBSTACLES;
+    frame.can_dlc = sizeof(CAN::Obstacles);
+    frame.data[0] = m_current_obstacles.front_obs_angleRz_deg >> 8;
+    frame.data[1] = m_current_obstacles.front_obs_angleRz_deg | 0xFF;
+    frame.data[2] = m_current_obstacles.front_obs_distance_mm >> 8;
+    frame.data[3] = m_current_obstacles.front_obs_distance_mm | 0xFF;
+    frame.data[4] = m_current_obstacles.rear_obs_angleRz_deg >> 8;
+    frame.data[5] = m_current_obstacles.rear_obs_angleRz_deg | 0xFF;
+    frame.data[6] = m_current_obstacles.rear_obs_distance_mm >> 8;
+    frame.data[7] = m_current_obstacles.rear_obs_distance_mm | 0xFF;
     send_can_frame(frame);
 }
 
