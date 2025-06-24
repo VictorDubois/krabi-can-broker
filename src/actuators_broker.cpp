@@ -56,6 +56,7 @@ void CanActuatorBroker::receive_can_messages()
         if (nbytes < 0)
         {
             RCLCPP_ERROR(this->get_logger(), "CAN read error");
+            m_CAN_read_error = true;
             continue;
         }
 
@@ -104,6 +105,7 @@ void CanActuatorBroker::receive_can_messages()
         {
             usleep(100);
         }
+        m_CAN_read_error = false;
     }
 }
 void CanActuatorBroker::remainingTimeCallback(
@@ -329,10 +331,18 @@ void CanActuatorBroker::publish_AX12(const CAN::AX12Read& ax12_read, int id)
     }
 }
 
+void CanActuatorBroker::produce_diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat)
+{
+    GenericCanBroker::produce_diagnostics(stat);
+}
+
 int main(int argc, char* argv[])
 {
     rclcpp::init(argc, argv);
     auto node = std::make_shared<CanActuatorBroker>();
+    diagnostic_updater::Updater updater(node);
+    updater.setHardwareID("CAN_actuators");
+    updater.add("CAN_actuators diag", node.get(), &CanActuatorBroker::produce_diagnostics);
     rclcpp::spin(node);
     rclcpp::shutdown();
 

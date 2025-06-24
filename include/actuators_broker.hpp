@@ -25,6 +25,8 @@ public:
         }
     };
 
+    void produce_diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat);
+
 private:
     bool m_is_blue;
     int8_t m_remaining_time = 100;

@@ -55,6 +55,7 @@ void MotorBroker::receive_can_messages()
         if (nbytes < 0)
         {
             RCLCPP_ERROR(this->get_logger(), "CAN read error");
+            m_CAN_read_error = true;
             continue;
         }
 
@@ -144,6 +145,7 @@ void MotorBroker::receive_can_messages()
         {
             usleep(100);
         }
+        m_CAN_read_error = false;
     }
 }
 
@@ -255,10 +257,18 @@ void MotorBroker::publish_analog_sensors(const int16_t& battery_voltage_mV)
     battery_pub_->publish(msg);
 }
 
+void MotorBroker::produce_diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat)
+{
+    GenericCanBroker::produce_diagnostics(stat);
+}
+
 int main(int argc, char* argv[])
 {
     rclcpp::init(argc, argv);
     auto node = std::make_shared<MotorBroker>();
+    diagnostic_updater::Updater updater(node);
+    updater.setHardwareID("CAN_motor");
+    updater.add("CAN_motor diag", node.get(), &MotorBroker::produce_diagnostics);
     rclcpp::spin(node);
     rclcpp::shutdown();
 

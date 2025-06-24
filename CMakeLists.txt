@@ -16,6 +16,7 @@ find_package(goal_strategy REQUIRED)
 find_package(tf2_eigen REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(diagnostic_updater REQUIRED)
 
 # uncomment the following section in order to fill in
 # further dependencies manually.
@@ -25,7 +26,7 @@ add_executable(actuators_broker src/generic_can_broker.cpp src/actuators_broker.
 
 ament_target_dependencies(actuators_broker rclcpp krabi_msgs sensor_msgs geometry_msgs std_msgs goal_strategy  tf2_eigen
 tf2_ros
-tf2_geometry_msgs)
+tf2_geometry_msgs diagnostic_updater)
 
 target_include_directories(actuators_broker PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -36,7 +37,7 @@ add_executable(motor_broker src/generic_can_broker.cpp src/motor_broker.cpp)
 
 ament_target_dependencies(motor_broker rclcpp krabi_msgs sensor_msgs geometry_msgs std_msgs goal_strategy  tf2_eigen
 tf2_ros
-tf2_geometry_msgs)
+tf2_geometry_msgs diagnostic_updater)
 
 target_include_directories(motor_broker PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
