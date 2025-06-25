@@ -286,10 +286,12 @@ void MotorBroker::produce_diagnostics(diagnostic_updater::DiagnosticStatusWrappe
     if (motors_current_msg.left_wheel_unstalled_in_ms != 0)
     {
         stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Left motor stalled");
+        stat.add("Left motor unstalled in (ms)", motors_current_msg.left_wheel_unstalled_in_ms);
     }
     if (motors_current_msg.right_wheel_unstalled_in_ms != 0)
     {
         stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Right motor stalled");
+        stat.add("Right motor unstalled in (ms)", motors_current_msg.right_wheel_unstalled_in_ms);
     }
     GenericCanBroker::produce_diagnostics(stat);
 }
