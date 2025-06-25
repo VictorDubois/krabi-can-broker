@@ -4,6 +4,7 @@
 #include <geometry_msgs/msg/twist.hpp>
 #include <krabi_msgs/msg/motors.hpp>
 #include <krabi_msgs/msg/motors_cmd.hpp>
+#include <krabi_msgs/msg/motors_current.hpp>
 #include <krabi_msgs/msg/motors_parameters.hpp>
 #include <krabi_msgs/msg/odom_lighter.hpp>
 #include <sensor_msgs/msg/battery_state.hpp>
@@ -20,8 +21,10 @@ public:
 
 private:
     krabi_msgs::msg::OdomLighter odom_lighter_msg;
+    krabi_msgs::msg::MotorsCurrent motors_current_msg;
 
     rclcpp::Publisher<krabi_msgs::msg::OdomLighter>::SharedPtr odom_lighter_pub_;
+    rclcpp::Publisher<krabi_msgs::msg::MotorsCurrent>::SharedPtr motors_current_pub_;
     rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_pub_;
     // rclcpp::Subscription<krabi_msgs::msg::Motors>::SharedPtr motors_sub_;
     void publish_analog_sensors(const int16_t& battery_voltage_mV);

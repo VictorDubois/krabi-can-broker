@@ -127,6 +127,16 @@ void MotorBroker::receive_can_messages()
             odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
+        else if (frame.can_id == CAN::can_ids::CURRENT_LIMIT
+                 && frame.can_dlc == sizeof(CAN::CurrentLimit))
+        {
+            motors_current_msg.left_current_ma = frame.data[1] | (frame.data[0] << 8);
+            motors_current_msg.right_current_ma = frame.data[2] | (frame.data[2] << 8);
+            motors_current_msg.left_wheel_unstalled_in_ms = frame.data[5] | (frame.data[4] << 8);
+            motors_current_msg.right_wheel_unstalled_in_ms = frame.data[7] | (frame.data[6] << 8);
+            motors_current_pub_->publish(motors_current_msg);
+        }
+
         else if (frame.can_id == CAN::can_ids::ODOMETRY_THETA_FLOAT
                  && frame.can_dlc == sizeof(CAN::OdometryThetaFloat))
         {
@@ -273,6 +283,14 @@ void MotorBroker::publish_analog_sensors(const int16_t& battery_voltage_mV)
 
 void MotorBroker::produce_diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat)
 {
+    if (motors_current_msg.left_wheel_unstalled_in_ms != 0)
+    {
+        stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Left motor stalled");
+    }
+    if (motors_current_msg.right_wheel_unstalled_in_ms != 0)
+    {
+        stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Right motor stalled");
+    }
     GenericCanBroker::produce_diagnostics(stat);
 }
 
