@@ -100,6 +100,20 @@ void MotorBroker::receive_can_messages()
             odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
+        else if (frame.can_id == CAN::can_ids::ODOMETRY_XYum
+                 && frame.can_dlc == sizeof(CAN::OdometryXYum))
+        {
+            int32_t poseX_um = frame.data[3] | (frame.data[2] << 8) | (frame.data[1] << 16)
+                               | (frame.data[0] << 24);
+            odom_lighter_msg.pose_x = poseX_um / 1000000.0f;
+
+            int32_t poseY_um = frame.data[7] | (frame.data[6] << 8) | (frame.data[5] << 16)
+                               | (frame.data[4] << 24);
+            odom_lighter_msg.pose_y = poseY_um / 1000000.0f;
+
+            odom_lighter_pub_->publish(odom_lighter_msg);
+        }
+
         else if (frame.can_id == CAN::can_ids::ODOMETRY_THETA
                  && frame.can_dlc == sizeof(CAN::OdometryThetaAndCurrent))
         {
