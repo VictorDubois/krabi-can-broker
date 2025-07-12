@@ -9,6 +9,8 @@ MotorBroker::MotorBroker()
     // Create subscribers for each message type
     // motor_sub_ = this->create_subscription<krabi_msgs::msg::Motors>(
     //   "motor", 10, std::bind(&MotorBroker::motorCallback, this, std::placeholders::_1));
+    motors_current_pub_
+      = this->create_publisher<krabi_msgs::msg::MotorsCurrent>("motors_current", 10);
 
     odom_lighter_pub_ = this->create_publisher<krabi_msgs::msg::OdomLighter>("odom_lighter", 10);
     odom_lighter_msg = krabi_msgs::msg::OdomLighter();
