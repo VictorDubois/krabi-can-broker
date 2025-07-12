@@ -93,18 +93,22 @@ void GenericCanBroker::produce_diagnostics(diagnostic_updater::DiagnosticStatusW
     if (m_cannot_send_CAN_frame)
     {
         stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Unable to send CAN frame");
+        stat.add("Unable to send CAN frame", 0);
     }
     if (m_cannot_open_CAN_socket)
     {
         stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Unable to open CAN socket");
+        stat.add("Unable to open CAN socket", 0);
     }
     if (m_cannot_bind_CAN_socket)
     {
         stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Unable to bind CAN socket");
+        stat.add("Unable to bind CAN socket", 0);
     }
     if (m_CAN_read_error)
     {
         stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Unable to read CAN frame");
+        stat.add("Unable to read CAN frame", 0);
     }
 }
 
