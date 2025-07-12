@@ -57,6 +57,7 @@ void CanActuatorBroker::receive_can_messages()
         {
             RCLCPP_ERROR(this->get_logger(), "CAN read error");
             m_CAN_read_error = true;
+            usleep(100);
             continue;
         }
 
