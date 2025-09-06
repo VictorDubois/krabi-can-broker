@@ -1,7 +1,8 @@
 #pragma once
 
 #include "../include/krabi_can_broker/CanStruct/can_structs.h"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/executors.hpp"
+#include "rclcpp/node.hpp"
 #include <arpa/inet.h>
 #include <cstdint>
 #include <cstring>

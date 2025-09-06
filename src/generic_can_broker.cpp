@@ -1,6 +1,6 @@
 #include "../include/generic_can_broker.hpp"
 #include "../include/krabi_can_broker/CanStruct/can_structs.h"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/node.hpp"
 #include <arpa/inet.h>
 #include <cstring>
 #include <iostream>
