@@ -170,7 +170,7 @@ void MotorBroker::receive_can_messages()
             odom_lighter_msg.speed_wz = speedWz_mrad_s / 1000.f;
             odom_lighter_pub_->publish(odom_lighter_msg);
         }
-        else if (frame.can_id == CAN::can_ids::C620_OUTPUT_1
+        else if (frame.can_id == CAN::can_ids::C620_OUTPUT_2
                  && frame.can_dlc == sizeof(CAN::C620Output))
         {
 
@@ -191,7 +191,7 @@ void MotorBroker::receive_can_messages()
 
             c620_pub_->publish(C620Output_dual_msg);
         }
-        else if (frame.can_id == CAN::can_ids::C620_OUTPUT_2
+        else if (frame.can_id == CAN::can_ids::C620_OUTPUT_1
                  && frame.can_dlc == sizeof(CAN::C620Output))
         {
 
