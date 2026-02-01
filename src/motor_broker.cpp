@@ -12,6 +12,8 @@ MotorBroker::MotorBroker()
     motors_current_pub_
       = this->create_publisher<krabi_msgs::msg::MotorsCurrent>("motors_current", 10);
 
+    c620_pub_ = this->create_publisher<krabi_msgs::msg::C620DualOutput>("c610", 10);
+
     odom_lighter_pub_ = this->create_publisher<krabi_msgs::msg::OdomLighter>("odom_lighter", 10);
     odom_lighter_msg = krabi_msgs::msg::OdomLighter();
 
