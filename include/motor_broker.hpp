@@ -1,6 +1,7 @@
 #pragma once
 
 #include "generic_can_broker.hpp"
+#include "odom_publisher.hpp"
 #include <geometry_msgs/msg/twist.hpp>
 #include <krabi_msgs/msg/c620_dual_output.hpp>
 #include <krabi_msgs/msg/c620_output.hpp>
@@ -52,4 +53,24 @@ private:
 
     uint16_t skip_the_next_C620_ouput_1_packets = 0;
     uint16_t skip_the_next_C620_ouput_2_packets = 0;
+
+    // ex OdometryTFPublisher
+private:
+    void OdometryTFPublisher();
+    void publishOdom(const krabi_msgs::msg::OdomLighter odommsg);
+
+    void publishTf(const geometry_msgs::msg::Pose& pose);
+
+    std::shared_ptr<tf2_ros::TransformListener> m_tf_listener_{ nullptr };
+    std::unique_ptr<tf2_ros::Buffer> m_tf_buffer_;
+    std::unique_ptr<tf2_ros::TransformBroadcaster> m_tf_broadcaster;
+
+    rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_init_pose_pub;
+    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
+
+    void publishInitialPose();
+
+    nav_msgs::msg::Odometry odom_msg;
+    geometry_msgs::msg::TransformStamped odom_trans;
+    bool m_publish_tf_odom = false;
 };

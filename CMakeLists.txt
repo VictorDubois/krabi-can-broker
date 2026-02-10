@@ -11,6 +11,7 @@ find_package(rclcpp REQUIRED)
 find_package(krabi_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(goal_strategy REQUIRED)
 find_package(tf2_eigen REQUIRED)
@@ -33,9 +34,9 @@ target_include_directories(actuators_broker PUBLIC
   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
 target_compile_features(actuators_broker PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
-add_executable(motor_broker src/generic_can_broker.cpp src/motor_broker.cpp)
+add_executable(motor_broker src/generic_can_broker.cpp src/motor_broker.cpp src/odom_publisher.cpp)
 
-ament_target_dependencies(motor_broker rclcpp krabi_msgs sensor_msgs geometry_msgs std_msgs goal_strategy  tf2_eigen
+ament_target_dependencies(motor_broker rclcpp krabi_msgs sensor_msgs geometry_msgs nav_msgs std_msgs goal_strategy  tf2_eigen
 tf2_ros
 tf2_geometry_msgs diagnostic_updater)
 

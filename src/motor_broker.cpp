@@ -1,4 +1,5 @@
 #include "motor_broker.hpp"
+#include "odom_publisher.hpp"
 
 MotorBroker::MotorBroker()
   : GenericCanBroker()
@@ -38,7 +39,7 @@ MotorBroker::MotorBroker()
       10,
       std::bind(&MotorBroker::motorsParametersCallback, this, std::placeholders::_1));
 
-    // Additional subscribers for other message types...
+    OdometryTFPublisher();
 }
 
 MotorBroker::~MotorBroker()
@@ -225,7 +226,8 @@ void MotorBroker::receive_can_messages()
 
             // Last of the 3 odom_lighter messages to be published by the STM32 => update when
             // received
-            odom_lighter_pub_->publish(odom_lighter_msg);
+            // odom_lighter_pub_->publish(odom_lighter_msg);
+            publishOdom(odom_lighter_msg);
         }
 
         else
