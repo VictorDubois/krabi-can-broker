@@ -49,4 +49,7 @@ private:
     rclcpp::Subscription<krabi_msgs::msg::MotorsCmd>::SharedPtr motors_cmd_sub_;
     rclcpp::Subscription<krabi_msgs::msg::MotorsParameters>::SharedPtr motors_parameters_sub_;
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr motors_enable_sub_;
+
+    uint16_t skip_the_next_C620_ouput_1_packets = 0;
+    uint16_t skip_the_next_C620_ouput_2_packets = 0;
 };
