@@ -86,7 +86,7 @@ void MotorBroker::receive_can_messages()
             odom_lighter_msg.pose_y = poseY_mm / 1000.0f;
 
             int16_t angleRz_centi_deg = frame.data[7] | (frame.data[6] << 8);
-            odom_lighter_msg.angle_rz = angleRz_centi_deg / (100.0f * 180.f / M_PI);
+            odom_lighter_msg.angle_rz = angleRz_centi_deg * centi_deg_to_rad;
 
             odom_lighter_pub_->publish(odom_lighter_msg);
         }
@@ -125,9 +125,10 @@ void MotorBroker::receive_can_messages()
             int32_t angleRz_centi_deg = frame.data[3] | (frame.data[2] << 8) | (frame.data[1] << 16)
                                         | (frame.data[0] << 24);
 
-            int16_t current_left = frame.data[5] | (frame.data[4] << 8);
-            int16_t current_right = frame.data[7] | (frame.data[6] << 8);
-            odom_lighter_msg.angle_rz = angleRz_centi_deg / (100.0f * 180.f / M_PI);
+            [[maybe_unused]] int16_t current_left = frame.data[5] | (frame.data[4] << 8);
+            [[maybe_unused]] int16_t current_right = frame.data[7] | (frame.data[6] << 8);
+
+            odom_lighter_msg.angle_rz = angleRz_centi_deg * centi_deg_to_rad;
 
             odom_lighter_pub_->publish(odom_lighter_msg);
         }
@@ -180,12 +181,10 @@ void MotorBroker::receive_can_messages()
             uint8_t motor_temperature_deg = (frame.data[6]);
 
             C620Output_dual_msg.right_motor.measured_rotor_mechanical_angle_deg
-              = mechanical_angle_8192_ticks * (360.f / 8192.f);
+              = mechanical_angle_8192_ticks * C620_8192_ticks_to_deg_ratio;
             C620Output_dual_msg.right_motor.measured_speed_rpm = speed_rpm;
 
-            float C620_wheel_diameter = 0.060f; // 60mm // @todo update
-            C620Output_dual_msg.right_motor.measured_speed_m_s
-              = speed_rpm * C620_wheel_diameter * M_PI / 60.f;
+            C620Output_dual_msg.right_motor.measured_speed_m_s = speed_rpm * rpm_to_m_s_ratio;
             C620Output_dual_msg.right_motor.measured_torque = torque;
             C620Output_dual_msg.right_motor.temperature_deg = motor_temperature_deg;
 
@@ -201,12 +200,10 @@ void MotorBroker::receive_can_messages()
             uint8_t motor_temperature_deg = (frame.data[6]);
 
             C620Output_dual_msg.left_motor.measured_rotor_mechanical_angle_deg
-              = mechanical_angle_8192_ticks * (360.f / 8192.f);
+              = mechanical_angle_8192_ticks * C620_8192_ticks_to_deg_ratio;
             C620Output_dual_msg.left_motor.measured_speed_rpm = speed_rpm;
 
-            float C620_wheel_diameter = 0.060f; // 60mm // @todo update
-            C620Output_dual_msg.left_motor.measured_speed_m_s
-              = speed_rpm * C620_wheel_diameter * M_PI / 60.f;
+            C620Output_dual_msg.left_motor.measured_speed_m_s = speed_rpm * rpm_to_m_s_ratio;
 
             C620Output_dual_msg.left_motor.measured_torque = torque;
             C620Output_dual_msg.left_motor.temperature_deg = motor_temperature_deg;
