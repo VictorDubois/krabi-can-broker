@@ -126,7 +126,7 @@ void MotorBroker::receive_can_messages()
             size_t l_float_length = sizeof(frame.data[0]) * 4;
             std::memcpy(&odom_lighter_msg.pose_x, frame.data, l_float_length);
             std::memcpy(&odom_lighter_msg.pose_y, frame.data + l_float_length, l_float_length);
-            odom_lighter_pub_->publish(odom_lighter_msg);
+            // odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
         else if (frame.can_id == CAN::can_ids::ODOMETRY_LIGHT
@@ -141,7 +141,7 @@ void MotorBroker::receive_can_messages()
             int16_t angleRz_centi_deg = frame.data[7] | (frame.data[6] << 8);
             odom_lighter_msg.angle_rz = angleRz_centi_deg * centi_deg_to_rad;
 
-            odom_lighter_pub_->publish(odom_lighter_msg);
+            // odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
         else if (frame.can_id == CAN::can_ids::ODOMETRY_XY
@@ -155,7 +155,7 @@ void MotorBroker::receive_can_messages()
                                | (frame.data[4] << 24);
             odom_lighter_msg.pose_y = poseY_mm / 1000.0f;
 
-            odom_lighter_pub_->publish(odom_lighter_msg);
+            // odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
         else if (frame.can_id == CAN::can_ids::ODOMETRY_XYum
@@ -169,7 +169,7 @@ void MotorBroker::receive_can_messages()
                                | (frame.data[4] << 24);
             odom_lighter_msg.pose_y = poseY_um / 1000000.0f;
 
-            odom_lighter_pub_->publish(odom_lighter_msg);
+            // odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
         else if (frame.can_id == CAN::can_ids::ODOMETRY_THETA
@@ -183,7 +183,7 @@ void MotorBroker::receive_can_messages()
 
             odom_lighter_msg.angle_rz = angleRz_centi_deg * centi_deg_to_rad;
 
-            odom_lighter_pub_->publish(odom_lighter_msg);
+            // odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
         else if (frame.can_id == CAN::can_ids::CURRENT_LIMIT
@@ -209,7 +209,7 @@ void MotorBroker::receive_can_messages()
             size_t l_float_length = sizeof(frame.data[0]) * 4;
             std::memcpy(&odom_lighter_msg.speed_vx, frame.data, l_float_length);
             std::memcpy(&odom_lighter_msg.speed_wz, frame.data + l_float_length, l_float_length);
-            odom_lighter_pub_->publish(odom_lighter_msg);
+            // odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
         else if (frame.can_id == CAN::can_ids::ODOMETRY_SPEED
@@ -222,6 +222,9 @@ void MotorBroker::receive_can_messages()
             int32_t speedWz_mrad_s = (frame.data[4] << 24) | (frame.data[5] << 16)
                                      | (frame.data[6] << 8) | frame.data[7];
             odom_lighter_msg.speed_wz = speedWz_mrad_s / 1000.f;
+
+            // Last of the 3 odom_lighter messages to be published by the STM32 => update when
+            // received
             odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
