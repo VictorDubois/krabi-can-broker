@@ -18,12 +18,8 @@ MotorBroker::MotorBroker()
     odom_lighter_pub_ = this->create_publisher<krabi_msgs::msg::OdomLighter>("odom_lighter", 10);
     odom_lighter_msg = krabi_msgs::msg::OdomLighter();
     odom_lighter_msg.header.frame_id = "odom";
-    odom_lighter_msg.header.stamp = this->now();
-    odom_lighter_msg.pose_x = 0;
-    odom_lighter_msg.pose_y = 0;
-    odom_lighter_msg.angle_rz = 0;
-    odom_lighter_msg.speed_vx = 0;
-    odom_lighter_msg.speed_wz = 0;
+
+    OdometryTFPublisher(); // init before the rest
 
     battery_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>("motor_battery", 10);
 
@@ -45,8 +41,6 @@ MotorBroker::MotorBroker()
       "motors_parameters",
       10,
       std::bind(&MotorBroker::motorsParametersCallback, this, std::placeholders::_1));
-
-    OdometryTFPublisher();
 }
 
 MotorBroker::~MotorBroker()

@@ -75,10 +75,7 @@ void MotorBroker::publishOdom(krabi_msgs::msg::OdomLighter odom_lighter_msg)
     publishTf(odom_msg.pose.pose);
 
     odom_msg.header.stamp = odom_lighter_msg.header.stamp;
-    if (odom_lighter_msg.header.stamp.sec == 0 && odom_lighter_msg.header.stamp.nanosec == 0)
-    {
-        odom_msg.header.stamp = this->now();
-    }
+    odom_msg.header.stamp = this->now();
 
     odom_msg.twist.twist.linear.x = odom_lighter_msg.speed_vx;
     odom_msg.twist.twist.angular.z = odom_lighter_msg.speed_wz;
