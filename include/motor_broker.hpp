@@ -14,7 +14,8 @@
 #include <std_msgs/msg/bool.hpp>
 
 constexpr float C620_wheel_diameter = 0.060f; // 60mm // @todo update
-constexpr float rpm_to_m_s_ratio = C620_wheel_diameter * M_PI / 60.f;
+constexpr float reductor_ratio = 36;
+constexpr float rpm_to_m_s_ratio = C620_wheel_diameter * M_PI / (60.f * reductor_ratio);
 constexpr float C620_8192_ticks_to_deg_ratio = (360.f / 8192.f);
 constexpr float centi_deg_to_rad = 1 / (100.0f * 180.f / M_PI);
 
