@@ -67,7 +67,7 @@ void MotorBroker::receive_can_messages()
         }
 
         // Reduce the spam of C620_OUTPUT messages (1kHz per motor)
-        else if (frame.can_id == CAN::can_ids::C620_OUTPUT_2 && skip_the_next_C620_ouput_1_packets)
+        else if (frame.can_id == CAN::can_ids::C620_OUTPUT_1 && skip_the_next_C620_ouput_1_packets)
         {
             skip_the_next_C620_ouput_1_packets--;
             continue;
