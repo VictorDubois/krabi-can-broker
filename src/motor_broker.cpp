@@ -1,4 +1,5 @@
 #include "motor_broker.hpp"
+#include "odom_publisher.hpp"
 
 MotorBroker::MotorBroker()
   : GenericCanBroker()
@@ -12,8 +13,13 @@ MotorBroker::MotorBroker()
     motors_current_pub_
       = this->create_publisher<krabi_msgs::msg::MotorsCurrent>("motors_current", 10);
 
+    c620_pub_ = this->create_publisher<krabi_msgs::msg::C620DualOutput>("c610", 10);
+
     odom_lighter_pub_ = this->create_publisher<krabi_msgs::msg::OdomLighter>("odom_lighter", 10);
     odom_lighter_msg = krabi_msgs::msg::OdomLighter();
+    odom_lighter_msg.header.frame_id = "odom";
+
+    OdometryTFPublisher(); // init before the rest
 
     battery_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>("motor_battery", 10);
 
@@ -35,8 +41,6 @@ MotorBroker::MotorBroker()
       "motors_parameters",
       10,
       std::bind(&MotorBroker::motorsParametersCallback, this, std::placeholders::_1));
-
-    // Additional subscribers for other message types...
 }
 
 MotorBroker::~MotorBroker()
@@ -62,6 +66,59 @@ void MotorBroker::receive_can_messages()
             continue;
         }
 
+        // Reduce the spam of C620_OUTPUT messages (1kHz per motor)
+        else if (frame.can_id == CAN::can_ids::C620_OUTPUT_1 && skip_the_next_C620_ouput_1_packets)
+        {
+            skip_the_next_C620_ouput_1_packets--;
+            continue;
+        }
+        else if (frame.can_id == CAN::can_ids::C620_OUTPUT_2 && skip_the_next_C620_ouput_2_packets)
+        {
+            skip_the_next_C620_ouput_2_packets--;
+            continue;
+        }
+        else if (frame.can_id == CAN::can_ids::C620_OUTPUT_2
+                 && frame.can_dlc == sizeof(CAN::C620Output))
+        {
+
+            uint16_t mechanical_angle_8192_ticks = (frame.data[0] << 8) | (frame.data[1]);
+            int16_t speed_rpm = (frame.data[2] << 8) | (frame.data[3]);
+            int16_t torque = (frame.data[4] << 8) | (frame.data[5]);
+            uint8_t motor_temperature_deg = (frame.data[6]);
+
+            C620Output_dual_msg.right_motor.measured_rotor_mechanical_angle_deg
+              = mechanical_angle_8192_ticks * C620_8192_ticks_to_deg_ratio;
+            C620Output_dual_msg.right_motor.measured_speed_rpm = speed_rpm;
+
+            C620Output_dual_msg.right_motor.measured_speed_m_s = speed_rpm * rpm_to_m_s_ratio;
+            C620Output_dual_msg.right_motor.measured_torque = torque;
+            C620Output_dual_msg.right_motor.temperature_deg = motor_temperature_deg;
+
+            c620_pub_->publish(C620Output_dual_msg);
+            skip_the_next_C620_ouput_1_packets = 10; // Reduce to 100Hz
+        }
+        else if (frame.can_id == CAN::can_ids::C620_OUTPUT_1
+                 && frame.can_dlc == sizeof(CAN::C620Output))
+        {
+
+            uint16_t mechanical_angle_8192_ticks = (frame.data[0] << 8) | (frame.data[1]);
+            int16_t speed_rpm = (frame.data[2] << 8) | (frame.data[3]);
+            int16_t torque = (frame.data[4] << 8) | (frame.data[5]);
+            uint8_t motor_temperature_deg = (frame.data[6]);
+
+            C620Output_dual_msg.left_motor.measured_rotor_mechanical_angle_deg
+              = mechanical_angle_8192_ticks * C620_8192_ticks_to_deg_ratio;
+            C620Output_dual_msg.left_motor.measured_speed_rpm = speed_rpm;
+
+            C620Output_dual_msg.left_motor.measured_speed_m_s = speed_rpm * rpm_to_m_s_ratio;
+
+            C620Output_dual_msg.left_motor.measured_torque = torque;
+            C620Output_dual_msg.left_motor.temperature_deg = motor_temperature_deg;
+
+            c620_pub_->publish(C620Output_dual_msg);
+            skip_the_next_C620_ouput_2_packets = 10; // Reduce to 100Hz
+        }
+
         else if (frame.can_id == CAN::can_ids::ODOMETRY_XY_FLOAT
                  && frame.can_dlc == sizeof(CAN::OdometryXYFloat))
         {
@@ -71,7 +128,7 @@ void MotorBroker::receive_can_messages()
             size_t l_float_length = sizeof(frame.data[0]) * 4;
             std::memcpy(&odom_lighter_msg.pose_x, frame.data, l_float_length);
             std::memcpy(&odom_lighter_msg.pose_y, frame.data + l_float_length, l_float_length);
-            odom_lighter_pub_->publish(odom_lighter_msg);
+            // odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
         else if (frame.can_id == CAN::can_ids::ODOMETRY_LIGHT
@@ -84,9 +141,9 @@ void MotorBroker::receive_can_messages()
             odom_lighter_msg.pose_y = poseY_mm / 1000.0f;
 
             int16_t angleRz_centi_deg = frame.data[7] | (frame.data[6] << 8);
-            odom_lighter_msg.angle_rz = angleRz_centi_deg / (100.0f * 180.f / M_PI);
+            odom_lighter_msg.angle_rz = angleRz_centi_deg * centi_deg_to_rad;
 
-            odom_lighter_pub_->publish(odom_lighter_msg);
+            // odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
         else if (frame.can_id == CAN::can_ids::ODOMETRY_XY
@@ -100,7 +157,7 @@ void MotorBroker::receive_can_messages()
                                | (frame.data[4] << 24);
             odom_lighter_msg.pose_y = poseY_mm / 1000.0f;
 
-            odom_lighter_pub_->publish(odom_lighter_msg);
+            // odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
         else if (frame.can_id == CAN::can_ids::ODOMETRY_XYum
@@ -114,7 +171,7 @@ void MotorBroker::receive_can_messages()
                                | (frame.data[4] << 24);
             odom_lighter_msg.pose_y = poseY_um / 1000000.0f;
 
-            odom_lighter_pub_->publish(odom_lighter_msg);
+            // odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
         else if (frame.can_id == CAN::can_ids::ODOMETRY_THETA
@@ -123,11 +180,12 @@ void MotorBroker::receive_can_messages()
             int32_t angleRz_centi_deg = frame.data[3] | (frame.data[2] << 8) | (frame.data[1] << 16)
                                         | (frame.data[0] << 24);
 
-            int16_t current_left = frame.data[5] | (frame.data[4] << 8);
-            int16_t current_right = frame.data[7] | (frame.data[6] << 8);
-            odom_lighter_msg.angle_rz = angleRz_centi_deg / (100.0f * 180.f / M_PI);
+            [[maybe_unused]] int16_t current_left = frame.data[5] | (frame.data[4] << 8);
+            [[maybe_unused]] int16_t current_right = frame.data[7] | (frame.data[6] << 8);
 
-            odom_lighter_pub_->publish(odom_lighter_msg);
+            odom_lighter_msg.angle_rz = angleRz_centi_deg * centi_deg_to_rad;
+
+            // odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
         else if (frame.can_id == CAN::can_ids::CURRENT_LIMIT
@@ -153,7 +211,7 @@ void MotorBroker::receive_can_messages()
             size_t l_float_length = sizeof(frame.data[0]) * 4;
             std::memcpy(&odom_lighter_msg.speed_vx, frame.data, l_float_length);
             std::memcpy(&odom_lighter_msg.speed_wz, frame.data + l_float_length, l_float_length);
-            odom_lighter_pub_->publish(odom_lighter_msg);
+            // odom_lighter_pub_->publish(odom_lighter_msg);
         }
 
         else if (frame.can_id == CAN::can_ids::ODOMETRY_SPEED
@@ -166,8 +224,13 @@ void MotorBroker::receive_can_messages()
             int32_t speedWz_mrad_s = (frame.data[4] << 24) | (frame.data[5] << 16)
                                      | (frame.data[6] << 8) | frame.data[7];
             odom_lighter_msg.speed_wz = speedWz_mrad_s / 1000.f;
-            odom_lighter_pub_->publish(odom_lighter_msg);
+
+            // Last of the 3 odom_lighter messages to be published by the STM32 => update when
+            // received
+            // odom_lighter_pub_->publish(odom_lighter_msg);
+            publishOdom(odom_lighter_msg);
         }
+
         else
         {
             usleep(100);

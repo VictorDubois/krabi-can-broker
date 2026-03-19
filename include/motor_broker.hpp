@@ -1,7 +1,10 @@
 #pragma once
 
 #include "generic_can_broker.hpp"
+#include "odom_publisher.hpp"
 #include <geometry_msgs/msg/twist.hpp>
+#include <krabi_msgs/msg/c620_dual_output.hpp>
+#include <krabi_msgs/msg/c620_output.hpp>
 #include <krabi_msgs/msg/motors.hpp>
 #include <krabi_msgs/msg/motors_cmd.hpp>
 #include <krabi_msgs/msg/motors_current.hpp>
@@ -9,6 +12,12 @@
 #include <krabi_msgs/msg/odom_lighter.hpp>
 #include <sensor_msgs/msg/battery_state.hpp>
 #include <std_msgs/msg/bool.hpp>
+
+constexpr float C620_wheel_diameter = 0.060f; // 60mm // @todo update
+constexpr float reductor_ratio = 36;
+constexpr float rpm_to_m_s_ratio = C620_wheel_diameter * M_PI / (60.f * reductor_ratio);
+constexpr float C620_8192_ticks_to_deg_ratio = (360.f / 8192.f);
+constexpr float centi_deg_to_rad = 1 / (100.0f * 180.f / M_PI);
 
 // Node class
 class MotorBroker : public GenericCanBroker
@@ -22,10 +31,12 @@ public:
 private:
     krabi_msgs::msg::OdomLighter odom_lighter_msg;
     krabi_msgs::msg::MotorsCurrent motors_current_msg;
+    krabi_msgs::msg::C620DualOutput C620Output_dual_msg;
 
     rclcpp::Publisher<krabi_msgs::msg::OdomLighter>::SharedPtr odom_lighter_pub_;
     rclcpp::Publisher<krabi_msgs::msg::MotorsCurrent>::SharedPtr motors_current_pub_;
     rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_pub_;
+    rclcpp::Publisher<krabi_msgs::msg::C620DualOutput>::SharedPtr c620_pub_;
     // rclcpp::Subscription<krabi_msgs::msg::Motors>::SharedPtr motors_sub_;
     void publish_analog_sensors(const int16_t& battery_voltage_mV);
 
@@ -40,4 +51,27 @@ private:
     rclcpp::Subscription<krabi_msgs::msg::MotorsCmd>::SharedPtr motors_cmd_sub_;
     rclcpp::Subscription<krabi_msgs::msg::MotorsParameters>::SharedPtr motors_parameters_sub_;
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr motors_enable_sub_;
+
+    uint16_t skip_the_next_C620_ouput_1_packets = 0;
+    uint16_t skip_the_next_C620_ouput_2_packets = 0;
+
+    // ex OdometryTFPublisher
+private:
+    void OdometryTFPublisher();
+    void publishOdom(const krabi_msgs::msg::OdomLighter odommsg);
+
+    void publishTf(const geometry_msgs::msg::Pose& pose);
+
+    std::shared_ptr<tf2_ros::TransformListener> m_tf_listener_{ nullptr };
+    std::unique_ptr<tf2_ros::Buffer> m_tf_buffer_;
+    std::unique_ptr<tf2_ros::TransformBroadcaster> m_tf_broadcaster;
+
+    rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_init_pose_pub;
+    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
+
+    void publishInitialPose();
+
+    nav_msgs::msg::Odometry odom_msg;
+    geometry_msgs::msg::TransformStamped odom_trans;
+    bool m_publish_tf_odom = false;
 };
