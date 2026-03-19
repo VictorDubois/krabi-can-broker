@@ -206,6 +206,10 @@ void CanActuatorBroker::servoCallback(const krabi_msgs::msg::Actuators2025::Shar
     frame.data[1] = msg->vacuum_1.release;
     frame.data[2] = msg->vacuum_2.enable_pump;
     frame.data[3] = msg->vacuum_2.release;
+    frame.data[4] = msg->vacuum_3.enable_pump;
+    frame.data[5] = msg->vacuum_3.release;
+    frame.data[6] = msg->vacuum_4.enable_pump;
+    frame.data[7] = msg->vacuum_4.release;
     send_can_frame(frame);
 
     frame.can_id = CAN::can_ids::OBSTACLES;
