@@ -80,7 +80,6 @@ void MotorBroker::receive_can_messages()
         else if (frame.can_id == CAN::can_ids::C620_OUTPUT_2
                  && frame.can_dlc == sizeof(CAN::C620Output))
         {
-
             uint16_t mechanical_angle_8192_ticks = (frame.data[0] << 8) | (frame.data[1]);
             int16_t speed_rpm = (frame.data[2] << 8) | (frame.data[3]);
             int16_t torque = (frame.data[4] << 8) | (frame.data[5]);
@@ -95,12 +94,11 @@ void MotorBroker::receive_can_messages()
             C620Output_dual_msg.right_motor.temperature_deg = motor_temperature_deg;
 
             c620_pub_->publish(C620Output_dual_msg);
-            skip_the_next_C620_ouput_1_packets = 10; // Reduce to 100Hz
+            skip_the_next_C620_ouput_2_packets = 10; // Reduce to 100Hz
         }
         else if (frame.can_id == CAN::can_ids::C620_OUTPUT_1
                  && frame.can_dlc == sizeof(CAN::C620Output))
         {
-
             uint16_t mechanical_angle_8192_ticks = (frame.data[0] << 8) | (frame.data[1]);
             int16_t speed_rpm = (frame.data[2] << 8) | (frame.data[3]);
             int16_t torque = (frame.data[4] << 8) | (frame.data[5]);
@@ -111,12 +109,11 @@ void MotorBroker::receive_can_messages()
             C620Output_dual_msg.left_motor.measured_speed_rpm = speed_rpm;
 
             C620Output_dual_msg.left_motor.measured_speed_m_s = speed_rpm * rpm_to_m_s_ratio;
-
             C620Output_dual_msg.left_motor.measured_torque = torque;
             C620Output_dual_msg.left_motor.temperature_deg = motor_temperature_deg;
 
             c620_pub_->publish(C620Output_dual_msg);
-            skip_the_next_C620_ouput_2_packets = 10; // Reduce to 100Hz
+            skip_the_next_C620_ouput_1_packets = 10; // Reduce to 100Hz
         }
 
         else if (frame.can_id == CAN::can_ids::ODOMETRY_XY_FLOAT
