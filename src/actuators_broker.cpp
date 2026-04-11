@@ -273,7 +273,11 @@ void CanActuatorBroker::publish_analog_sensors(const int16_t& battery_power_mV,
     msg.voltage = battery_power_mV / 1000.0; // Convert mV to V
     msg.present = true;
 
-    RCLCPP_INFO(this->get_logger(), "Publishing Battery Power: battery_mV=%d", battery_power_mV);
+    RCLCPP_INFO_THROTTLE(this->get_logger(),
+                         *this->get_clock(),
+                         std::chrono::milliseconds(100).count(),
+                         "Publishing Battery Power: battery_mV=%d",
+                         battery_power_mV);
 
     battery_power_pub_->publish(msg);
 

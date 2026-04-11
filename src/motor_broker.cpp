@@ -342,7 +342,11 @@ void MotorBroker::publish_analog_sensors(const int16_t& battery_voltage_mV)
     msg.voltage = battery_voltage_mV / 1000.0; // Convert mV to V
     msg.present = true;
 
-    RCLCPP_INFO(this->get_logger(), "Publishing AnalogSensors: battery_mV=%d", battery_voltage_mV);
+    RCLCPP_INFO_THROTTLE(this->get_logger(),
+                         *this->get_clock(),
+                         std::chrono::milliseconds(100).count(),
+                         "Publishing AnalogSensors: battery_mV=%d",
+                         battery_voltage_mV);
 
     battery_pub_->publish(msg);
 }
