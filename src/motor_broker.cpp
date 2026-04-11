@@ -60,7 +60,10 @@ void MotorBroker::receive_can_messages()
 
         if (nbytes < 0)
         {
-            RCLCPP_ERROR(this->get_logger(), "CAN read error");
+            RCLCPP_ERROR_THROTTLE(this->get_logger(),
+                                  *this->get_clock(),
+                                  std::chrono::milliseconds(100).count(),
+                                  "CAN read error");
             m_CAN_read_error = true;
             usleep(100);
             continue;
@@ -346,16 +349,30 @@ void MotorBroker::publish_analog_sensors(const int16_t& battery_voltage_mV)
 
 void MotorBroker::produce_diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat)
 {
+    bool l_error = false;
     if (motors_current_msg.left_wheel_unstalled_in_ms != 0)
     {
         stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Left motor stalled");
         stat.add("Left motor unstalled in (ms)", motors_current_msg.left_wheel_unstalled_in_ms);
+        l_error = true;
     }
     if (motors_current_msg.right_wheel_unstalled_in_ms != 0)
     {
         stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Right motor stalled");
         stat.add("Right motor unstalled in (ms)", motors_current_msg.right_wheel_unstalled_in_ms);
+        l_error = true;
     }
+    if (m_CAN_read_error)
+    {
+        stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "CAN read error");
+        l_error = true;
+    }
+
+    if (!l_error)
+    {
+        stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Motors OK");
+    }
+
     GenericCanBroker::produce_diagnostics(stat);
 }
 

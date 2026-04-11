@@ -55,7 +55,10 @@ void CanActuatorBroker::receive_can_messages()
 
         if (nbytes < 0)
         {
-            RCLCPP_ERROR(this->get_logger(), "CAN read error");
+            RCLCPP_ERROR_THROTTLE(this->get_logger(),
+                                  *this->get_clock(),
+                                  std::chrono::milliseconds(100).count(),
+                                  "CAN read error");
             m_CAN_read_error = true;
             usleep(100);
             continue;
@@ -338,6 +341,18 @@ void CanActuatorBroker::publish_AX12(const CAN::AX12Read& ax12_read, int id)
 
 void CanActuatorBroker::produce_diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat)
 {
+    bool l_error = false;
+
+    if (m_CAN_read_error)
+    {
+        stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "CAN read error");
+        l_error = true;
+    }
+
+    if (!l_error)
+    {
+        stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Motors OK");
+    }
     GenericCanBroker::produce_diagnostics(stat);
 }
 
