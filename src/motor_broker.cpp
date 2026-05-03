@@ -41,6 +41,11 @@ MotorBroker::MotorBroker()
       "motors_parameters",
       10,
       std::bind(&MotorBroker::motorsParametersCallback, this, std::placeholders::_1));
+
+    motors_pid_set_sub_ = this->create_subscription<krabi_msgs::msg::MotorsPidSet>(
+      "motors_pid_set",
+      10,
+      std::bind(&MotorBroker::motorsPidSetCallback, this, std::placeholders::_1));
 }
 
 MotorBroker::~MotorBroker()
@@ -304,6 +309,30 @@ void MotorBroker::motorsParametersCallback(const krabi_msgs::msg::MotorsParamete
     frame.data[3] = l_max_current_right_mA;
     frame.data[4] = l_max_current_mA >> 8;
     frame.data[5] = l_max_current_mA;
+    send_can_frame(frame);
+}
+
+void MotorBroker::motorsPidSetCallback(const krabi_msgs::msg::MotorsPidSet::SharedPtr msg)
+{
+    struct can_frame frame;
+    constexpr size_t float_size = sizeof(float);
+
+    frame.can_id = CAN::can_ids::MOTOR_BOARD_LINEAR_PI_SET;
+    frame.can_dlc = sizeof(CAN::MotorBoardPiSet);
+    std::memcpy(frame.data, &msg->linear_p, float_size);
+    std::memcpy(frame.data + float_size, &msg->linear_i, float_size);
+    send_can_frame(frame);
+
+    frame.can_id = CAN::can_ids::MOTOR_BOARD_ANGULAR_PI_SET;
+    frame.can_dlc = sizeof(CAN::MotorBoardPiSet);
+    std::memcpy(frame.data, &msg->angular_p, float_size);
+    std::memcpy(frame.data + float_size, &msg->angular_i, float_size);
+    send_can_frame(frame);
+
+    frame.can_id = CAN::can_ids::MOTOR_BOARD_DERIVATIVE_SET;
+    frame.can_dlc = sizeof(CAN::MotorBoardDerivativeSet);
+    std::memcpy(frame.data, &msg->linear_d, float_size);
+    std::memcpy(frame.data + float_size, &msg->angular_d, float_size);
     send_can_frame(frame);
 }
 
