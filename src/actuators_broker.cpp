@@ -35,9 +35,11 @@ CanActuatorBroker::CanActuatorBroker()
     // Does not work, as the CAN broker is started independantly of the strat => we now use a sub
     // this->declare_parameter("isBlue", true);
     // m_is_blue = this->get_parameter("isBlue").as_bool();
+    std::cout << "About the start receive_can_messages thread..." << std::endl;
 
     // Start a separate thread to listen to CAN messages
     can_receiver_thread_ = std::thread(&CanActuatorBroker::receive_can_messages, this);
+    std::cout << "CanActuatorBroker constructor finished." << std::endl;
 
     /*cmd_vel_sub_ = this->create_subscription<CmdVel>(
         "cmd_vel", 10, std::bind(&CanActuatorBroker::cmdVelCallback, this,
@@ -111,6 +113,7 @@ void CanActuatorBroker::receive_can_messages()
         }
         m_CAN_read_error = false;
     }
+    std::cerr << "Exiting receive_can_messages thread..." << std::endl;
 }
 void CanActuatorBroker::remainingTimeCallback(
   const builtin_interfaces::msg::Duration::SharedPtr msg)
@@ -368,6 +371,12 @@ void CanActuatorBroker::produce_diagnostics(diagnostic_updater::DiagnosticStatus
         l_error = true;
     }
 
+    if (!rclcpp::ok())
+    {
+        stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "ROS2 not ok");
+        l_error = true;
+    }
+
     if (!l_error)
     {
         stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Actuators OK");
@@ -377,11 +386,14 @@ void CanActuatorBroker::produce_diagnostics(diagnostic_updater::DiagnosticStatus
 
 int main(int argc, char* argv[])
 {
+    std::cout << "Starting CanActuatorBroker node..." << std::endl;
     rclcpp::init(argc, argv);
     auto node = std::make_shared<CanActuatorBroker>();
+    std::cout << "CanActuatorBroker node started." << std::endl;
     diagnostic_updater::Updater updater(node);
     updater.setHardwareID("CAN_actuators");
     updater.add("CAN_actuators diag", node.get(), &CanActuatorBroker::produce_diagnostics);
+    std::cout << "Entering spin loop..." << std::endl;
     rclcpp::spin(node);
     rclcpp::shutdown();
 

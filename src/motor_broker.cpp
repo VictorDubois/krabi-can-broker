@@ -407,6 +407,12 @@ void MotorBroker::produce_diagnostics(diagnostic_updater::DiagnosticStatusWrappe
         l_error = true;
     }
 
+    if (!rclcpp::ok())
+    {
+        stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "ROS2 not ok");
+        l_error = true;
+    }
+
     if (!l_error)
     {
         stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Motors OK");
