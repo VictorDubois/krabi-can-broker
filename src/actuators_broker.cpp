@@ -35,6 +35,7 @@ CanActuatorBroker::CanActuatorBroker()
     // Does not work, as the CAN broker is started independantly of the strat => we now use a sub
     // this->declare_parameter("isBlue", true);
     // m_is_blue = this->get_parameter("isBlue").as_bool();
+    m_last_CAN_message_time = this->now();
     std::cout << "About the start receive_can_messages thread..." << std::endl;
 
     // Start a separate thread to listen to CAN messages
@@ -53,6 +54,7 @@ void CanActuatorBroker::receive_can_messages()
     struct can_frame frame;
     while (rclcpp::ok())
     {
+        bool l_msg_received = true;
         int nbytes = read(can_socket_, &frame, sizeof(struct can_frame));
 
         if (nbytes < 0)
@@ -63,6 +65,7 @@ void CanActuatorBroker::receive_can_messages()
                                   "CAN read error");
             m_CAN_read_error = true;
             usleep(100);
+            l_msg_received = false;
             continue;
         }
 
@@ -110,8 +113,14 @@ void CanActuatorBroker::receive_can_messages()
         else
         {
             usleep(100);
+            l_msg_received = false;
         }
         m_CAN_read_error = false;
+
+        if (l_msg_received)
+        {
+            m_last_CAN_message_time = this->now();
+        }
     }
     std::cerr << "Exiting receive_can_messages thread..." << std::endl;
 }
@@ -358,6 +367,12 @@ void CanActuatorBroker::publish_AX12(const CAN::AX12Read& ax12_read, int id)
 void CanActuatorBroker::produce_diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat)
 {
     bool l_error = false;
+
+    if (m_last_CAN_message_time + rclcpp::Duration(0, 500000000) < this->now())
+    {
+        stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Actuators are silent");
+        l_error = true;
+    }
 
     if (m_CAN_read_error)
     {
