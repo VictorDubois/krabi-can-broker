@@ -21,6 +21,8 @@ MotorBroker::MotorBroker()
 
     OdometryTFPublisher(); // init before the rest
 
+    m_last_CAN_message_time = this->now();
+
     battery_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>("motor_battery", 10);
 
     // Start a separate thread to listen to CAN messages
@@ -61,6 +63,7 @@ void MotorBroker::receive_can_messages()
     struct can_frame frame;
     while (rclcpp::ok())
     {
+        bool l_msg_received = true;
         int nbytes = read(can_socket_, &frame, sizeof(struct can_frame));
 
         if (nbytes < 0)
@@ -70,6 +73,7 @@ void MotorBroker::receive_can_messages()
                                   std::chrono::milliseconds(100).count(),
                                   "CAN read error");
             m_CAN_read_error = true;
+            l_msg_received = false;
             usleep(100);
             continue;
         }
@@ -239,6 +243,12 @@ void MotorBroker::receive_can_messages()
         else
         {
             usleep(100);
+            l_msg_received = false;
+        }
+
+        if (l_msg_received)
+        {
+            m_last_CAN_message_time = this->now();
         }
         m_CAN_read_error = false;
     }
@@ -393,6 +403,11 @@ void MotorBroker::produce_diagnostics(diagnostic_updater::DiagnosticStatusWrappe
     {
         stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Right motor stalled");
         stat.add("Right motor unstalled in (ms)", motors_current_msg.right_wheel_unstalled_in_ms);
+        l_error = true;
+    }
+    if (m_last_CAN_message_time + rclcpp::Duration(0, 500000000) < this->now())
+    {
+        stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Motors are silent");
         l_error = true;
     }
     if (m_CAN_read_error)

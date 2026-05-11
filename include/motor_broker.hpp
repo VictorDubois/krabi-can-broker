@@ -60,6 +60,8 @@ private:
 
     // ex OdometryTFPublisher
 private:
+    rclcpp::Time m_last_CAN_message_time;
+
     void OdometryTFPublisher();
     void publishOdom(const krabi_msgs::msg::OdomLighter odommsg);
 
