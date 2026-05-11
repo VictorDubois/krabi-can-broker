@@ -362,9 +362,15 @@ void CanActuatorBroker::produce_diagnostics(diagnostic_updater::DiagnosticStatus
         l_error = true;
     }
 
+    if (m_cannot_send_CAN_frame)
+    {
+        stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "CAN send error");
+        l_error = true;
+    }
+
     if (!l_error)
     {
-        stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Motors OK");
+        stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Actuators OK");
     }
     GenericCanBroker::produce_diagnostics(stat);
 }
