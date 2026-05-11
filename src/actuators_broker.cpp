@@ -266,8 +266,16 @@ void CanActuatorBroker::publish_analog_sensors(const int16_t& battery_power_mV,
 {
     // Convert the AnalogSensors struct to a ROS2 message (e.g., BatteryState for illustration)
     auto msg = sensor_msgs::msg::BatteryState();
+    msg.power_supply_technology = sensor_msgs::msg::BatteryState::POWER_SUPPLY_TECHNOLOGY_LIPO;
+
     msg.voltage = battery_power_mV / 1000.0; // Convert mV to V
-    msg.present = true;
+
+    msg.percentage = 100 * (msg.voltage - 10.8) / 1.7;
+    msg.present = false;
+    if (msg.voltage > 10)
+    {
+        msg.present = true;
+    }
 
     RCLCPP_INFO_THROTTLE(this->get_logger(),
                          *this->get_clock(),
@@ -278,7 +286,12 @@ void CanActuatorBroker::publish_analog_sensors(const int16_t& battery_power_mV,
     battery_power_pub_->publish(msg);
 
     msg.voltage = battery_elec_mV / 1000.0; // Convert mV to V
-    msg.present = true;
+    msg.percentage = 100 * (msg.voltage - 10.8) / 1.7;
+    msg.present = false;
+    if (msg.voltage > 10)
+    {
+        msg.present = true;
+    }
 
     RCLCPP_INFO(this->get_logger(), "Publishing Battery Elec: battery_mV=%d", battery_elec_mV);
 
