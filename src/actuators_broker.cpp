@@ -270,7 +270,7 @@ void CanActuatorBroker::publish_analog_sensors(const int16_t& battery_power_mV,
 
     msg.voltage = battery_power_mV / 1000.0; // Convert mV to V
 
-    msg.percentage = 100 * (msg.voltage - 10.8) / 1.7;
+    msg.percentage = (msg.voltage - 10.8) / 1.7;
     msg.present = false;
     if (msg.voltage > 10)
     {
@@ -286,7 +286,7 @@ void CanActuatorBroker::publish_analog_sensors(const int16_t& battery_power_mV,
     battery_power_pub_->publish(msg);
 
     msg.voltage = battery_elec_mV / 1000.0; // Convert mV to V
-    msg.percentage = 100 * (msg.voltage - 10.8) / 1.7;
+    msg.percentage = (msg.voltage - 10.8) / 1.7;
     msg.present = false;
     if (msg.voltage > 10)
     {
