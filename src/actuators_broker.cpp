@@ -385,11 +385,11 @@ void CanActuatorBroker::produce_diagnostics(diagnostic_updater::DiagnosticStatus
         l_error = true;
     }
 
-    if (m_last_AX12_error_time + rclcpp::Duration(0, 500000000) < this->now())
+    /*if (m_last_AX12_error_time + rclcpp::Duration(0, 500000000) < this->now())
     {
         stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "AX12 errors");
         l_error = true;
-    }
+    }*/
 
     if (m_CAN_read_error)
     {
