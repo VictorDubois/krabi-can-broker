@@ -36,6 +36,8 @@ CanActuatorBroker::CanActuatorBroker()
     // this->declare_parameter("isBlue", true);
     // m_is_blue = this->get_parameter("isBlue").as_bool();
     m_last_CAN_message_time = this->now();
+    m_last_AX12_error_time = rclcpp::Time(0, 0);
+
     std::cout << "About the start receive_can_messages thread..." << std::endl;
 
     // Start a separate thread to listen to CAN messages
@@ -107,6 +109,15 @@ void CanActuatorBroker::receive_can_messages()
             ax12_read.presentCurrent = frame.data[5] | frame.data[4] << 8;
             ax12_read.moving = frame.data[6];
             ax12_read.mode = frame.data[7];
+
+            if (ax12_read.hardwareErrorStatus)
+            {
+                RCLCPP_WARN(this->get_logger(),
+                            "AX12 error, id: %d, hardwareErrorStatus: %d",
+                            frame.can_id - CAN::can_ids::AX12_R1 + 1,
+                            ax12_read.hardwareErrorStatus);
+                m_last_AX12_error_time = this->now();
+            }
 
             publish_AX12(ax12_read, frame.can_id);
         }
@@ -371,6 +382,12 @@ void CanActuatorBroker::produce_diagnostics(diagnostic_updater::DiagnosticStatus
     if (m_last_CAN_message_time + rclcpp::Duration(0, 500000000) < this->now())
     {
         stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Actuators are silent");
+        l_error = true;
+    }
+
+    if (m_last_AX12_error_time + rclcpp::Duration(0, 500000000) < this->now())
+    {
+        stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "AX12 errors");
         l_error = true;
     }
 

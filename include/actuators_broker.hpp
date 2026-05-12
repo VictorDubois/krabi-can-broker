@@ -29,6 +29,7 @@ public:
 
 private:
     rclcpp::Time m_last_CAN_message_time;
+    rclcpp::Time m_last_AX12_error_time;
     bool m_is_blue;
     int8_t m_remaining_time = 100;
     CAN::Obstacles m_current_obstacles;
