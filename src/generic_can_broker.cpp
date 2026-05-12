@@ -56,7 +56,10 @@ void GenericCanBroker::send_can_frame(const struct can_frame& frame)
         std::cout << "Failed to send CAN frame" << std::endl;
         m_cannot_send_CAN_frame = true;
     }
-    m_cannot_send_CAN_frame = false;
+    else
+    {
+        m_cannot_send_CAN_frame = false;
+    }
 }
 
 int GenericCanBroker::init_can_socket(const std::string& interface)
