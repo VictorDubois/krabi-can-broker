@@ -36,7 +36,7 @@ CanActuatorBroker::CanActuatorBroker()
     // this->declare_parameter("isBlue", true);
     // m_is_blue = this->get_parameter("isBlue").as_bool();
     m_last_CAN_message_time = this->now();
-    m_last_AX12_error_time = rclcpp::Time(0, 0);
+    m_last_AX12_error_time = this->now();
 
     std::cout << "About the start receive_can_messages thread..." << std::endl;
 
