@@ -11,6 +11,8 @@ def generate_launch_description():
             package='krabi_can_broker',
             namespace='krabi_ns',
             executable='actuators_broker',
-            name='actuators_broker'
+            name='actuators_broker',
+            respawn=True,
+            respawn_delay=5.0
         )
     ])
