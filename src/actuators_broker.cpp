@@ -379,17 +379,21 @@ void CanActuatorBroker::produce_diagnostics(diagnostic_updater::DiagnosticStatus
 {
     bool l_error = false;
 
-    if (m_last_CAN_message_time + rclcpp::Duration(0, 500000000) < this->now())
+    if (m_last_CAN_message_time + rclcpp::Duration(0, 1000000000) < this->now())
     {
-        stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Actuators are silent");
+        stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Actuators timeout 1s");
         l_error = true;
     }
-
-    /*if (m_last_AX12_error_time + rclcpp::Duration(0, 500000000) < this->now())
+    else if (m_last_CAN_message_time + rclcpp::Duration(0, 200000000) < this->now())
+    {
+        stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Actuators timeout 200ms");
+        l_error = true;
+    }
+    else if (m_last_AX12_error_time + rclcpp::Duration(0, 500000000) < this->now())
     {
         stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "AX12 errors");
         l_error = true;
-    }*/
+    }
 
     if (m_CAN_read_error)
     {
@@ -424,7 +428,7 @@ int main(int argc, char* argv[])
     std::cout << "CanActuatorBroker node started." << std::endl;
     diagnostic_updater::Updater updater(node);
     updater.setHardwareID("CAN_actuators");
-    updater.add("CAN_actuators diag", node.get(), &CanActuatorBroker::produce_diagnostics);
+    updater.add("CAN_actuators", node.get(), &CanActuatorBroker::produce_diagnostics);
     std::cout << "Entering spin loop..." << std::endl;
     rclcpp::spin(node);
     rclcpp::shutdown();

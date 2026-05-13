@@ -442,7 +442,7 @@ int main(int argc, char* argv[])
     auto node = std::make_shared<MotorBroker>();
     diagnostic_updater::Updater updater(node);
     updater.setHardwareID("CAN_motor");
-    updater.add("CAN_motor diag", node.get(), &MotorBroker::produce_diagnostics);
+    updater.add("CAN_motor", node.get(), &MotorBroker::produce_diagnostics);
     rclcpp::spin(node);
     rclcpp::shutdown();
 
